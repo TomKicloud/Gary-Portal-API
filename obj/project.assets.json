@@ -7397,11 +7397,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/Users/tom/Projects/GaryPortalAPI/GaryPortalAPI/GaryPortalAPI.csproj",
+      "projectUniqueName": "/Users/tom/Projects/Gary-Portal-API/GaryPortalAPI.csproj",
       "projectName": "GaryPortalAPI",
-      "projectPath": "/Users/tom/Projects/GaryPortalAPI/GaryPortalAPI/GaryPortalAPI.csproj",
+      "projectPath": "/Users/tom/Projects/Gary-Portal-API/GaryPortalAPI.csproj",
       "packagesPath": "/Users/tom/.nuget/packages/",
-      "outputPath": "/Users/tom/Projects/GaryPortalAPI/GaryPortalAPI/obj/",
+      "outputPath": "/Users/tom/Projects/Gary-Portal-API/obj/",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "/usr/local/share/dotnet/sdk/NuGetFallbackFolder"

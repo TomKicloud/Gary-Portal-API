@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.808.4
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GaryPortalAPI", "GaryPortalAPI.csproj", "{1C74D658-9E07-4BD2-B7CE-B3E4C50BAA57}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1C74D658-9E07-4BD2-B7CE-B3E4C50BAA57}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1C74D658-9E07-4BD2-B7CE-B3E4C50BAA57}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1C74D658-9E07-4BD2-B7CE-B3E4C50BAA57}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1C74D658-9E07-4BD2-B7CE-B3E4C50BAA57}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {1731E1E7-CB33-4392-8ABB-6D90E86D5ED9}
+	EndGlobalSection
+EndGlobal

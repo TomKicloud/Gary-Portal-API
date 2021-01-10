@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "+VkRvQmZEie+sRdVC0ABUiyS8Te3NMQZ90P/mHoWtC+74sOTLSgJW0eioL1P8bPW5lekDxnKFaDmVOA8PObnrQ==",
+  "dgSpecHash": "dqbwruzhoKPqr8yBlXqA30f+J+oht126bIcplOXGLBaEfX1RvLMcb3h8gpgWJpP7FxIEVxCj64+pLaMVtRW0Ag==",
   "success": true,
-  "projectFilePath": "/Users/tom/Projects/GaryPortalAPI/GaryPortalAPI/GaryPortalAPI.csproj",
+  "projectFilePath": "/Users/tom/Projects/Gary-Portal-API/GaryPortalAPI.csproj",
   "expectedPackageFiles": [
     "/Users/tom/.nuget/packages/bouncycastle.netcore/1.8.3/bouncycastle.netcore.1.8.3.nupkg.sha512",
     "/Users/tom/.nuget/packages/google.protobuf/3.11.4/google.protobuf.3.11.4.nupkg.sha512",
