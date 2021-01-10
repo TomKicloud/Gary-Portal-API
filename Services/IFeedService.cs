@@ -117,7 +117,7 @@ namespace GaryPortalAPI.Services
             string uuid = Guid.NewGuid().ToString();
             Directory.CreateDirectory("/var/www/cdn/GaryPortal/Feed/Attachments/Media/");
             string newFileName = file.FileName.Replace(Path.GetFileNameWithoutExtension(file.FileName), uuid);
-            var filePath = $"/var/www/cdn/GaryPortal/FeedAttachments/Media/{newFileName}";
+            var filePath = $"/var/www/cdn/GaryPortal/Feed/Attachments/Media/{newFileName}";
             using (var stream = new FileStream(filePath, FileMode.Create))
                 await file.CopyToAsync(stream, ct);
             return $"https://cdn.tomk.online/Feed/Attachments/Media/{newFileName}";
