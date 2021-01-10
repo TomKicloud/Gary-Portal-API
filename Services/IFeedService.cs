@@ -120,7 +120,7 @@ namespace GaryPortalAPI.Services
             var filePath = $"/var/www/cdn/GaryPortal/Feed/Attachments/Media/{newFileName}";
             using (var stream = new FileStream(filePath, FileMode.Create))
                 await file.CopyToAsync(stream, ct);
-            return $"https://cdn.tomk.online/Feed/Attachments/Media/{newFileName}";
+            return $"https://cdn.tomk.online/GaryPortal/Feed/Attachments/Media/{newFileName}";
         }
 
         public async Task<FeedPost> UploadNewPost(FeedPost post)
