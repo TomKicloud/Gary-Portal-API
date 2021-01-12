@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using GaryPortalAPI.Models;
@@ -44,31 +45,34 @@ namespace GaryPortalAPI.Services
         public async Task<ICollection<User>> GetAllAsync(CancellationToken ct = default)
         {
             return await _context.Users
-                                    .Include(u => u.UserAuthentication)
-                                    .Include(u => u.UserPoints)
-                                    .Include(u => u.UserRanks)
-                                    .Include(u => u.UserTeam)
-                                    .ToListAsync(ct);
+                .AsNoTracking()
+                .Include(u => u.UserAuthentication)
+                .Include(u => u.UserPoints)
+                .Include(u => u.UserRanks)
+                .Include(u => u.UserTeam)
+                .Where(u => !u.IsDeleted)
+                .ToListAsync(ct);
         }
 
         public async Task<User> GetByIdAsync(string userUUID, CancellationToken ct = default)
         {
             return await _context.Users
-                                    .Include(u => u.UserAuthentication)
-                                    .Include(u => u.UserPoints)
-                                    .Include(u => u.UserRanks)
-                                    .Include(u => u.UserTeam)
-                                    .FirstOrDefaultAsync(u => u.UserUUID == userUUID, ct);
+                .AsNoTracking()
+                .Include(u => u.UserAuthentication)
+                .Include(u => u.UserPoints)
+                .Include(u => u.UserRanks)
+                .Include(u => u.UserTeam)
+                .FirstOrDefaultAsync(u => u.UserUUID == userUUID, ct);
         }
 
         public async Task<bool> IsEmailFreeAsync(string email, CancellationToken ct = default)
         {
-            return await _context.UserAuthentications.FirstOrDefaultAsync(u => u.UserEmail == email, ct) == null;
+            return await _context.UserAuthentications.AsNoTracking().FirstOrDefaultAsync(u => u.UserEmail == email, ct) == null;
         }
 
         public async Task<bool> IsUsernameFreeAsync(string username, CancellationToken ct = default)
         {
-            return await _context.Users.FirstOrDefaultAsync(u => u.UserName == username, ct) == null;
+            return await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.UserName == username, ct) == null;
         }
 
         public async Task<UserPoints> GetPointsForUserAsync(string userUUID, CancellationToken ct = default)
@@ -81,7 +85,7 @@ namespace GaryPortalAPI.Services
         public async Task<UserPoints> UpdatePointsForUserAsync(string uuid, UserPoints points, CancellationToken ct = default)
         {
             UserPoints userpoints = await _context.UserPoints
-                .AsNoTracking().FirstOrDefaultAsync(u => u.UserUUID == uuid);
+                .FirstOrDefaultAsync(u => u.UserUUID == uuid);
             if (userpoints != null)
             {
                 userpoints = points;

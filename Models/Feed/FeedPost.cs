@@ -83,4 +83,5 @@ namespace GaryPortalAPI.Models.Feed
         public virtual UserDTO UserDTO { get; set; }
         public virtual FeedPost Post { get; set; }
     }
+
 }

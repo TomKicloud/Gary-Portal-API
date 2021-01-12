@@ -38,8 +38,9 @@ namespace GaryPortalAPI.Services.Authentication
                 return null;
             }
 
+            user = await _userService.GetByIdAsync(user.UserUUID);
             user.UserAuthTokens = needsTokens ? await _tokenService.GenerateInitialTokensForUserAsync(user.UserUUID) : null;
-            return await _userService.GetByIdAsync(user.UserUUID);
+            return user;
         }
 
         public async void Dispose()

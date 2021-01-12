@@ -2,62 +2,21 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace GaryPortalAPI.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20210110214706_FeedAutoIncrement")]
+    partial class FeedAutoIncrement
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
                 .HasAnnotation("Relational:MaxIdentifierLength", 64)
                 .HasAnnotation("ProductVersion", "5.0.1");
-
-            modelBuilder.Entity("GaryPortalAPI.Models.Feed.AditLog", b =>
-                {
-                    b.Property<int>("AditLogId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    b.Property<int>("AditLogTeamId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("AditLogThumbnailUrl")
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("AditLogUrl")
-                        .HasColumnType("longtext");
-
-                    b.Property<int>("AditLogViews")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Caption")
-                        .HasColumnType("longtext");
-
-                    b.Property<DateTime>("DatePosted")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("tinyint(1)");
-
-                    b.Property<bool>("IsVideo")
-                        .HasColumnType("tinyint(1)");
-
-                    b.Property<string>("PosterUUID")
-                        .IsRequired()
-                        .HasColumnType("varchar(255)");
-
-                    b.HasKey("AditLogId");
-
-                    b.HasIndex("AditLogTeamId");
-
-                    b.HasIndex("PosterUUID");
-
-                    b.ToTable("FeedAditLogs");
-                });
 
             modelBuilder.Entity("GaryPortalAPI.Models.Feed.FeedAnswerVote", b =>
                 {
@@ -74,7 +33,7 @@ namespace GaryPortalAPI.Migrations
 
                     b.HasIndex("UserUUID");
 
-                    b.ToTable("FeedAnswerVotes");
+                    b.ToTable("FeedAnswerVote");
                 });
 
             modelBuilder.Entity("GaryPortalAPI.Models.Feed.FeedComment", b =>
@@ -145,7 +104,7 @@ namespace GaryPortalAPI.Migrations
 
                     b.HasIndex("PollId");
 
-                    b.ToTable("FeedPollAnswers");
+                    b.ToTable("FeedPollAnswer");
                 });
 
             modelBuilder.Entity("GaryPortalAPI.Models.Feed.FeedPost", b =>
@@ -226,9 +185,6 @@ namespace GaryPortalAPI.Migrations
                 {
                     b.Property<string>("UserUUID")
                         .HasColumnType("varchar(255)");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("tinyint(1)");
 
                     b.Property<bool>("IsQueued")
                         .HasColumnType("tinyint(1)");
@@ -408,25 +364,6 @@ namespace GaryPortalAPI.Migrations
                         .HasColumnType("longtext");
 
                     b.HasDiscriminator().HasValue("poll");
-                });
-
-            modelBuilder.Entity("GaryPortalAPI.Models.Feed.AditLog", b =>
-                {
-                    b.HasOne("GaryPortalAPI.Models.Team", "AditLogTeam")
-                        .WithMany("AditLogs")
-                        .HasForeignKey("AditLogTeamId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("GaryPortalAPI.Models.User", "Poster")
-                        .WithMany("AditLogs")
-                        .HasForeignKey("PosterUUID")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("AditLogTeam");
-
-                    b.Navigation("Poster");
                 });
 
             modelBuilder.Entity("GaryPortalAPI.Models.Feed.FeedAnswerVote", b =>
@@ -616,8 +553,6 @@ namespace GaryPortalAPI.Migrations
 
             modelBuilder.Entity("GaryPortalAPI.Models.Team", b =>
                 {
-                    b.Navigation("AditLogs");
-
                     b.Navigation("FeedPosts");
 
                     b.Navigation("UserTeams");
@@ -625,8 +560,6 @@ namespace GaryPortalAPI.Migrations
 
             modelBuilder.Entity("GaryPortalAPI.Models.User", b =>
                 {
-                    b.Navigation("AditLogs");
-
                     b.Navigation("FeedComments");
 
                     b.Navigation("FeedLikes");

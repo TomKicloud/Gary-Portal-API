@@ -41,6 +41,7 @@ namespace GaryPortalAPI.Models
         public bool IsQueued { get; set; }
         public DateTime UserCreatedAt { get; set; }
         public DateTime UserDateOfBirth { get; set; }
+        public bool IsDeleted { get; set; }
 
         public UserAuthenticationTokens UserAuthTokens { get; set; }
 
@@ -55,6 +56,7 @@ namespace GaryPortalAPI.Models
         public virtual ICollection<FeedAnswerVote> FeedVotes { get; set; }
         public virtual ICollection<FeedLike> FeedLikes { get; set; }
         public virtual ICollection<FeedComment> FeedComments { get; set; }
+        public virtual ICollection<AditLog> AditLogs { get; set; }
 
         public virtual UserDTO ConvertToDTO()
         {
@@ -64,7 +66,7 @@ namespace GaryPortalAPI.Models
                 UserFullName = UserFullName,
                 UserIsAdmin = UserIsAdmin,
                 UserIsStaff = UserIsStaff,
-                UserProfileImageUrl = UserProfileImageUrl
+                UserProfileImageUrl = UserProfileImageUrl,
             };
         }
 

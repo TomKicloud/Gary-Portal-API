@@ -1,9 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using FFMpegCore;
+using GaryPortalAPI.Data;
 using GaryPortalAPI.Models;
 using GaryPortalAPI.Models.Feed;
 using Microsoft.AspNetCore.Http;
@@ -13,11 +17,21 @@ namespace GaryPortalAPI.Services
 {
     public interface IFeedService : IDisposable
     {
-        Task<ICollection<FeedPost>> GetAllAsync(int startfrom, int limit = 10, CancellationToken ct = default);
+        Task<ICollection<FeedPost>> GetAllAsync(long startfrom, int limit = 10, CancellationToken ct = default);
         Task<FeedPost> GetByIdAsync(int feedPostId, CancellationToken ct = default);
         Task ToggleLikeForPostAsync(int feedPostId, string userUUID, CancellationToken ct = default);
         Task<bool> HasUserLikedPostAsync(string userUUID, int feedPostId, CancellationToken ct = default);
-        Task<string> UploadMediaAttachment(IFormFile file, CancellationToken ct = default);
+        Task<string> UploadMediaAttachmentAsync(IFormFile file, CancellationToken ct = default);
+        Task<FeedPost> UploadNewPostAsync(FeedPost post, CancellationToken ct = default);
+        Task MarkPostAsDeletedAsync(int feedPostId, CancellationToken ct = default);
+        Task VoteForPollAsync(string userUUID, int feedPollAnswerId, bool voteFor = true, CancellationToken ct = default);
+
+        Task<ICollection<AditLog>> GetAllAditLogsAsync(int teamId = 0, CancellationToken ct = default);
+        Task<AditLog> GetAditLogAsync(int aditLogId, CancellationToken ct = default);
+        Task MarkAditLogAsDeletedAsync(int aditLogId, CancellationToken ct = default);
+        Task<AditLogUrlResult> UploadAditLogMediaAsync(IFormFile aditLog, IFormFile thumbnail = null, CancellationToken ct = default);
+        Task<AditLog> UploadNewAditLogAsync(AditLog aditLog, CancellationToken ct = default);
+        Task WatchAditLogAsync(int aditLogId, string userUUID, CancellationToken ct = default);
     }
 
     public class FeedService : IFeedService
@@ -34,14 +48,20 @@ namespace GaryPortalAPI.Services
             await _context.DisposeAsync();
         }
 
-        public async Task<ICollection<FeedPost>> GetAllAsync(int startfrom, int limit = 10, CancellationToken ct = default)
+        public async Task<ICollection<FeedPost>> GetAllAsync(long startfrom, int limit = 10, CancellationToken ct = default)
         {
-            TimeSpan timeSpan = TimeSpan.FromMilliseconds(startfrom);
+            DateTime fromDate = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddMilliseconds(startfrom);
+            Console.WriteLine(fromDate.ToString());
             ICollection<FeedPost> posts = await _context.FeedPosts
-                .Include(fp => fp.Likes)
+                .AsNoTracking()
+                .Include(fp => fp.Likes.Where(fl => fl.IsLiked))
                 .Include(fp => fp.Poster)
                 .Include(fp => fp.PostTeam)
-                .Where(fp => fp.PostCreatedAt >= new DateTime(timeSpan.Ticks) && !fp.IsDeleted)
+                .Include(fp => fp.Comments)
+                    .ThenInclude(fpp => fpp.User)
+                .If(fp => fp.PostType.Equals("poll"), fp => fp.Include(fp => ((FeedPollPost)fp).PollAnswers).ThenInclude(fpa => fpa.Votes.Where(fpv => !fpv.IsDeleted)))
+                .Where(fp => fp.PostCreatedAt >= fromDate && !fp.IsDeleted)
+                .OrderByDescending(fp => fp.PostCreatedAt)
                 .Take(10)
                 .ToListAsync(ct);
             foreach (FeedPost post in posts)
@@ -55,11 +75,14 @@ namespace GaryPortalAPI.Services
         public async Task<FeedPost> GetByIdAsync(int feedPostId, CancellationToken ct = default)
         {
             FeedPost post = await _context.FeedPosts
-                    .Include(fp => fp.Likes)
-                    .Include(fp => fp.Poster)
-                    .Include(fp => fp.PostTeam)
-                    .FirstOrDefaultAsync(fp => fp.PostId == feedPostId);
-            Console.WriteLine(feedPostId);
+                .AsNoTracking()
+                .Include(fp => fp.Likes.Where(fl => fl.IsLiked))
+                .Include(fp => fp.Poster)
+                .Include(fp => fp.PostTeam)
+                .Include(fp => fp.Comments)
+                    .ThenInclude(fpp => fpp.User)
+                .If(fp => fp.PostType.Equals("poll"), fp => fp.Include(fp => ((FeedPollPost)fp).PollAnswers).ThenInclude(fpa => fpa.Votes.Where(fpv => !fpv.IsDeleted)))
+                .FirstOrDefaultAsync(fp => fp.PostId == feedPostId, ct);
             post.PosterDTO = post.Poster.ConvertToDTO();
             post.Poster = null;
             return post;
@@ -68,6 +91,7 @@ namespace GaryPortalAPI.Services
         public async Task<bool> HasUserLikedPostAsync(string userUUID, int feedPostId, CancellationToken ct = default)
         {
             FeedPost post = await _context.FeedPosts
+                    .AsNoTracking()
                     .Include(fp => fp.Likes)
                     .FirstOrDefaultAsync(ct);
             if (post == null)
@@ -89,7 +113,9 @@ namespace GaryPortalAPI.Services
             if (await HasUserLikedPostAsync(userUUID, feedPostId))
             {
                 like.IsLiked = false;
+                post.PostLikeCount -= 1;
                 _context.Update(like);
+                _context.Update(post);
             } else
             {
                 if (like == null)
@@ -101,16 +127,19 @@ namespace GaryPortalAPI.Services
                         IsLiked = true
                     };
                     await _context.FeedPostLikes.AddAsync(newLike);
+                    post.PostLikeCount += 1;
+                    _context.Update(post);
                 } else
                 {
                     like.IsLiked = !like.IsLiked;
                     _context.Update(like);
+                    post.PostLikeCount = like.IsLiked ? (post.PostLikeCount += 1) : (post.PostLikeCount -= 1);
                 }
             }
             await _context.SaveChangesAsync();
         }
  
-        public async Task<string> UploadMediaAttachment(IFormFile file, CancellationToken ct = default)
+        public async Task<string> UploadMediaAttachmentAsync(IFormFile file, CancellationToken ct = default)
         {
             if (file == null) return null;
 
@@ -123,9 +152,127 @@ namespace GaryPortalAPI.Services
             return $"https://cdn.tomk.online/GaryPortal/Feed/Attachments/Media/{newFileName}";
         }
 
-        public async Task<FeedPost> UploadNewPost(FeedPost post)
+        public async Task<FeedPost> UploadNewPostAsync(FeedPost post, CancellationToken ct = default)
         {
-            return null;
+            await _context.FeedPosts.AddAsync(post, ct);
+            await _context.SaveChangesAsync(ct);
+            return await GetByIdAsync(post.PostId, ct);
+        }
+
+        public async Task MarkPostAsDeletedAsync(int feedPostId, CancellationToken ct = default)
+        {
+            FeedPost post = await _context.FeedPosts.FindAsync(feedPostId);
+            post.IsDeleted = true;
+            _context.Update(post);
+            await _context.SaveChangesAsync(ct);
+        }
+
+        public async Task VoteForPollAsync(string userUUID, int feedPollAnswerId, bool voteFor = true, CancellationToken ct = default)
+        {
+            FeedAnswerVote vote = new FeedAnswerVote
+            {
+                UserUUID = userUUID,
+                PollAnswerId = feedPollAnswerId,
+                IsDeleted = !voteFor
+            };
+            FeedAnswerVote existingVote = await _context.FeedAnswerVotes.FindAsync(feedPollAnswerId, userUUID);
+            if (existingVote != null)
+            {
+                _context.Entry(existingVote).CurrentValues.SetValues(vote);
+            } else
+            {
+                _context.Add(vote);
+            }
+            await _context.SaveChangesAsync(ct);          
+        }
+
+        public async Task<ICollection<AditLog>> GetAllAditLogsAsync(int teamId = 0, CancellationToken ct = default)
+        {
+            ICollection<AditLog> aditLogs = await _context.FeedAditLogs
+                .AsNoTracking()
+                .Include(al => al.AditLogTeam)
+                .Include(al => al.Poster)
+                .Where(al => teamId == 0 || al.AditLogTeamId == teamId)
+                .ToListAsync(ct);
+            foreach (AditLog aditlog in aditLogs)
+            {
+                aditlog.PosterDTO = aditlog.Poster.ConvertToDTO();
+                aditlog.Poster = null;
+            }
+            return aditLogs;
+        }
+
+        public async Task<AditLog> GetAditLogAsync(int aditLogId, CancellationToken ct = default)
+        {
+            AditLog aditLog = await _context.FeedAditLogs
+                .AsNoTracking()
+                .Include(al => al.AditLogTeam)
+                .Include(al => al.Poster)
+                .FirstOrDefaultAsync(al => al.AditLogId == aditLogId);
+            aditLog.PosterDTO = aditLog.Poster.ConvertToDTO();
+            aditLog.Poster = null;
+            return aditLog;
+        }
+
+        public async Task MarkAditLogAsDeletedAsync(int aditLogId, CancellationToken ct = default)
+        {
+            AditLog aditlog = await _context.FeedAditLogs.FindAsync(aditLogId);
+            aditlog.IsDeleted = true;
+            _context.Update(aditlog);
+            await _context.SaveChangesAsync(ct);
+        }
+
+        public async Task<AditLogUrlResult> UploadAditLogMediaAsync(IFormFile aditLog, IFormFile thumbnail = null, CancellationToken ct = default)
+        {
+            if (aditLog == null) return null;
+
+            string uuid = Guid.NewGuid().ToString();
+            Directory.CreateDirectory("/var/www/cdn/GaryPortal/Feed/Attachments/AditLogs/");
+            Directory.CreateDirectory("/var/www/cdn/GaryPortal/Feed/Attachments/AditLogs/Thumbs");
+            string newFileName = aditLog.FileName.Replace(Path.GetFileNameWithoutExtension(aditLog.FileName), uuid);
+            var filePath = $"/var/www/cdn/GaryPortal/Feed/Attachments/Media/{newFileName}";
+            string thumbnailFilePath = "";
+            if (thumbnail != null)
+            {
+                string thumbnailFileName = thumbnail.FileName.Replace(Path.GetFileNameWithoutExtension(thumbnail.FileName), uuid);
+                thumbnailFilePath = $"/var/www/cdn/GaryPortal/Feed/Attachments/AditLogs/Thumbs/{thumbnailFileName}";
+            }
+            
+
+            using (var stream = new FileStream(filePath, FileMode.Create))
+                await aditLog.CopyToAsync(stream, ct);
+
+            if (thumbnail != null && !string.IsNullOrEmpty(thumbnailFilePath))
+            {
+                using (var stream = new FileStream(thumbnailFilePath, FileMode.Create))
+                    await thumbnail.CopyToAsync(stream, ct);
+            }
+
+            return new AditLogUrlResult
+            {
+                AditLogUrl = $"https://cdn.tomk.online/GaryPortal/Feed/Attachments/AditLogs/{newFileName}",
+                AditLogThumbnailUrl = thumbnail != null ? "https://cdn.tomk.online/GaryPortal/Feed/Attachments/AditLogs/Thumbs/{thumbnailFileName}" : ""
+            };
+
+        }
+
+        public async Task<AditLog> UploadNewAditLogAsync(AditLog aditLog, CancellationToken ct = default)
+        {
+            await _context.FeedAditLogs.AddAsync(aditLog, ct);
+            await _context.SaveChangesAsync(ct);
+            return await GetAditLogAsync(aditLog.AditLogId, ct);
+        }
+
+        public async Task WatchAditLogAsync(int aditLogId, string userUUID, CancellationToken ct = default)
+        {
+            AditLog aditLog = await _context.FeedAditLogs.FindAsync(aditLogId);
+            if (aditLog != null)
+            {
+                aditLog.AditLogViews += 1;
+                _context.Update(aditLog);
+                await _context.SaveChangesAsync(ct);
+            }
+            return;
         }
     }
 }

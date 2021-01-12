@@ -24,6 +24,9 @@ public class AppDbContext : DbContext
     public DbSet<FeedPollPost> FeedPollPosts { get; set; }
     public DbSet<FeedLike> FeedPostLikes { get; set; }
     public DbSet<FeedComment> FeedPostComments { get; set; }
+    public DbSet<FeedAnswerVote> FeedAnswerVotes { get; set; }
+    public DbSet<FeedPollAnswer> FeedPollAnswers { get; set; }
+    public DbSet<AditLog> FeedAditLogs { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -116,6 +119,8 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<FeedPost>(entity =>
         {
+            entity.Property(fp => fp.PostId)
+                .ValueGeneratedOnAdd();
             entity.HasKey(fp => fp.PostId);
             entity.Ignore(fp => fp.PosterDTO);
             entity.HasDiscriminator(fp => fp.PostType)
@@ -163,6 +168,8 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<FeedPollAnswer>(entity =>
         {
+            entity.Property(fpa => fpa.PollAnswerId)
+                .ValueGeneratedOnAdd();
             entity.HasKey(fpa => fpa.PollAnswerId);
             entity
                 .HasMany(fpa => fpa.Votes)
@@ -199,6 +206,8 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<FeedComment>(entity =>
         {
+            entity.Property(fc => fc.FeedCommentId)
+                .ValueGeneratedOnAdd();
             entity.Ignore(fc => fc.UserDTO);
             entity
                    .HasOne(fc => fc.User)
@@ -207,6 +216,25 @@ public class AppDbContext : DbContext
                    .OnDelete(DeleteBehavior.Cascade)
                    .IsRequired();
 
+        });
+
+        modelBuilder.Entity<AditLog>(entity =>
+        {
+            entity.Property(al => al.AditLogId)
+                .ValueGeneratedOnAdd();
+            entity.Ignore(al => al.PosterDTO);
+            entity
+                .HasOne(al => al.Poster)
+                .WithMany(p => p.AditLogs)
+                .HasForeignKey(al => al.PosterUUID)
+                .OnDelete(DeleteBehavior.Cascade)
+                .IsRequired();
+            entity
+                .HasOne(al => al.AditLogTeam)
+                .WithMany(t => t.AditLogs)
+                .HasForeignKey(al => al.AditLogTeamId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .IsRequired();
         });
 
         #endregion
