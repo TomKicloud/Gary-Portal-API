@@ -279,7 +279,7 @@ namespace GaryPortalAPI.Services
             return;
         }
 
-        public async Task ReportUserAsync(FeedReport report, CancellationToken ct = default)
+        public async Task ReportPostAsync(FeedReport report, CancellationToken ct = default)
         {
             await _context.FeedReports.AddAsync(report);
             await _context.SaveChangesAsync(ct);
