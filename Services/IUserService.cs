@@ -24,6 +24,15 @@ namespace GaryPortalAPI.Services
         Task<User> UpdateUserDetailsAsync(string uuid, UserDetails details, CancellationToken ct = default);
         Task<string> UpdateUserProfilePictureAsync(string uuid, IFormFile file, CancellationToken ct = default);
         Task<User> CreateNewUserAsync(UserRegistration creatingUser, CancellationToken ct = default);
+        Task<ICollection<UserBan>> GetUserCurrentBansAsync(string uuid, CancellationToken ct = default);
+        Task<bool> IsUserBannedAsync(string uuid, CancellationToken ct = default);
+        Task<UserBan> BanUserAsync(UserBan ban, CancellationToken ct = default);
+        Task RevokeBanAsync(int userBanId, CancellationToken ct = default);
+        Task<UserBlock> BlockUserAsync(string uuid, string blockedUUID, CancellationToken ct = default);
+        Task UnblockUserAsync(string uuid, string blockedUUID, CancellationToken ct = default);
+        Task<ICollection<UserBlock>> GetAllBlocksAsync(string uuid, CancellationToken ct = default);
+        Task ReportUserAsync(UserReport report, CancellationToken ct = default);
+        Task MarkReportAsDeletedAsync(int reportId, CancellationToken ct = default);    
     }
 
     public class UserService : IUserService
@@ -62,6 +71,7 @@ namespace GaryPortalAPI.Services
                 .Include(u => u.UserPoints)
                 .Include(u => u.UserRanks)
                 .Include(u => u.UserTeam)
+                .Include(u => u.BlockedUsers.Where(bu => bu.IsBlocked))
                 .FirstOrDefaultAsync(u => u.UserUUID == userUUID, ct);
         }
 
@@ -187,6 +197,84 @@ namespace GaryPortalAPI.Services
             }
 
             return null;
+        }
+
+        public async Task<ICollection<UserBan>> GetUserCurrentBansAsync(string uuid, CancellationToken ct = default)
+        {
+            return await _context.UserBans.Where(ub => ub.UserUUID.Equals(uuid) && ub.BanExpires > DateTime.UtcNow).ToListAsync(ct);
+        }
+
+        public async Task<bool> IsUserBannedAsync(string uuid, CancellationToken ct = default)
+        {
+            return (await GetUserCurrentBansAsync(uuid, ct)).Count != 0;
+        }
+
+        public async Task<UserBan> BanUserAsync(UserBan ban, CancellationToken ct = default)
+        {
+            await _context.UserBans.AddAsync(ban, ct);
+            await _context.SaveChangesAsync(ct);
+            return ban;
+        }
+
+        public async Task RevokeBanAsync(int userBanId, CancellationToken ct = default)
+        {
+            UserBan ban = await _context.UserBans.FindAsync(userBanId);
+            if (ban != null)
+            {
+                ban.BanExpires = DateTime.UtcNow.AddHours(-3);
+                _context.Update(ban);
+                await _context.SaveChangesAsync(ct);
+            }
+        }
+
+        public async Task<UserBlock> BlockUserAsync(string uuid, string blockedUUID, CancellationToken ct = default)
+        {
+            UserBlock block = new UserBlock
+            {
+                BlockerUserUUID = uuid,
+                BlockedUserUUID = blockedUUID,
+                IsBlocked = true
+            };
+            await _context.AddAsync(block, ct);
+            await _context.SaveChangesAsync(ct);
+            return block;
+        }
+
+        public async Task UnblockUserAsync(string uuid, string blockedUUID, CancellationToken ct = default)
+        {
+            UserBlock block = await _context.UserBlocks.FindAsync(uuid, blockedUUID);
+            if (block != null)
+            {
+                block.IsBlocked = false;
+                _context.Update(block);
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        public async Task<ICollection<UserBlock>> GetAllBlocksAsync(string uuid, CancellationToken ct = default)
+        {
+            return await _context.UserBlocks
+                .Where(ub => ub.BlockerUserUUID == uuid && ub.IsBlocked)
+                .Include(ub => ub.BlockedUser)
+                .AsNoTracking()
+                .ToListAsync(ct);
+        }
+
+        public async Task ReportUserAsync(UserReport report, CancellationToken ct = default)
+        {
+            await _context.UserReports.AddAsync(report);
+            await _context.SaveChangesAsync(ct);
+        }
+
+        public async Task MarkReportAsDeletedAsync(int reportId, CancellationToken ct = default)
+        {
+            UserReport report = await _context.UserReports.FindAsync(reportId);
+            if (report != null)
+            {
+                report.IsDeleted = true;
+                _context.Update(report);
+                await _context.SaveChangesAsync();
+            }
         }
     }
 }

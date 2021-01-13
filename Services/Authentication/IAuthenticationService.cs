@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Security.Authentication;
 using System.Threading;
 using System.Threading.Tasks;
 using GaryPortalAPI.Models;
@@ -37,6 +38,9 @@ namespace GaryPortalAPI.Services.Authentication
             if (!_hashingService.VerifyHash(user.UserAuthentication.UserPassHash, user.UserAuthentication.UserPassSalt, authUser.Password)) {
                 return null;
             }
+
+            if (await _userService.IsUserBannedAsync(user.UserUUID))
+                throw new AuthenticationException($"Banned");
 
             user = await _userService.GetByIdAsync(user.UserUUID);
             user.UserAuthTokens = needsTokens ? await _tokenService.GenerateInitialTokensForUserAsync(user.UserUUID) : null;

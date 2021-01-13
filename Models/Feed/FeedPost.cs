@@ -11,6 +11,7 @@ namespace GaryPortalAPI.Models.Feed
         public int PostId { get; set; }
         public string PosterUUID { get; set; }
         public int TeamId { get; set; }
+        public bool PostIsGlobal { get; set; }
         public string PostType { get; set; }
         public DateTime PostCreatedAt { get; set; }
         public string PostDescription { get; set; }

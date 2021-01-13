@@ -60,7 +60,12 @@ namespace GaryPortalAPI.Controllers
             return Ok(await _userRepository.GetPointsForUserAsync(uuid, ct));
         }
 
-
+        [HttpPost("ReportUser/{uuid}")]
+        public async Task<IActionResult> ReportUser([FromBody] UserReport report, CancellationToken ct = default)
+        {
+            await _userRepository.ReportUserAsync(report, ct);
+            return Ok();
+        }
 
         [HttpPut("UpdatePointsForUser/{uuid}")]
         [Produces(typeof(UserPoints))]
@@ -97,6 +102,25 @@ namespace GaryPortalAPI.Controllers
             {
                 return BadRequest();
             }
+        }
+
+        [HttpPost("BlockUser/{uuid}/{blockedUUID}")]
+        public async Task<IActionResult> BlockUser(string uuid, string blockedUUID, CancellationToken ct = default)
+        {
+            return Ok(await _userRepository.BlockUserAsync(uuid, blockedUUID, ct));
+        }
+
+        [HttpPost("UnblockUser/{uuid}/{blockedUUID}")]
+        public async Task<IActionResult> UnblockUser(string uuid, string blockedUUID, CancellationToken ct = default)
+        {
+            await _userRepository.UnblockUserAsync(uuid, blockedUUID, ct);
+            return Ok();
+        }
+
+        [HttpGet("GetBlockedUsersFor/{uuid}")]
+        public async Task<IActionResult> GetBlockedUsersFor(string uuid, CancellationToken ct = default)
+        {
+            return Ok(await _userRepository.GetAllBlocksAsync(uuid, ct));
         }
     }
 }

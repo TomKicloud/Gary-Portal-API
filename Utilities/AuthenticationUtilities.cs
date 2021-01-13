@@ -5,6 +5,11 @@ namespace GaryPortalAPI.Utilities
 {
     public static class AuthenticationUtilities
     {
+        public static string GetUUIDFromIdentity(ClaimsPrincipal idenditiy)
+        {
+            return idenditiy.Identity.Name;
+        }
+
         public static bool IsSameUserOrPrivileged(ClaimsPrincipal identity, string uuid)
         {
             return identity.Identity.Name.Equals(uuid) || IsStaff(identity) || IsAdmin(identity);

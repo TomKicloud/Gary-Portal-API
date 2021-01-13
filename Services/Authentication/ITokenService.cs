@@ -27,10 +27,12 @@ namespace GaryPortalAPI.Services.Authentication
     {
         private readonly AppDbContext _context;
         private readonly ApiSettings _apiSettings;
-        public TokenService(AppDbContext context, IOptions<ApiSettings> apiSettings)
+        private readonly IUserService _userService; 
+        public TokenService(AppDbContext context, IOptions<ApiSettings> apiSettings, IUserService userService)
         {
             _context = context;
             _apiSettings = apiSettings.Value;
+            _userService = userService;
         }
 
 
@@ -100,7 +102,7 @@ namespace GaryPortalAPI.Services.Authentication
                 .FirstOrDefaultAsync(t => t.UserUUID == userUUID && t.RefreshToken == refreshToken && t.TokenIsEnabled, ct);
             if (token != null)
             {
-                return token.TokenExpiryDate > DateTime.UtcNow;
+                return token.TokenExpiryDate > DateTime.UtcNow && !await _userService.IsUserBannedAsync(userUUID);
             }
             return false;
         }

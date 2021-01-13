@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Authentication;
 using System.Threading;
 using System.Threading.Tasks;
 using GaryPortalAPI.Models;
@@ -31,11 +32,18 @@ namespace GaryPortalAPI.Controllers
         [Produces(typeof(User))]
         public async Task<IActionResult> AuthenticateUser([FromBody] AuthenticatingUser authUser, bool needsTokens = true, CancellationToken ct = default)
         {
-            User user = await _authenticationService.Authenticate(authUser, needsTokens, ct);
-            if (user == null)
-                return BadRequest("Invalid login attempt");
             //TODO: require email confirmation
-            return Ok(user);
+            try
+            {
+                User user = await _authenticationService.Authenticate(authUser, needsTokens, ct);
+                if (user == null)
+                    return BadRequest("Invalid login attempt");
+                return Ok(user);
+            }
+            catch (AuthenticationException ex) {
+                return Unauthorized(ex.Message);
+            }
+          
         }
 
         [HttpPost("Refresh/{uuid}")]

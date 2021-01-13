@@ -17,7 +17,7 @@ namespace GaryPortalAPI.Services
 {
     public interface IFeedService : IDisposable
     {
-        Task<ICollection<FeedPost>> GetAllAsync(long startfrom, int limit = 10, CancellationToken ct = default);
+        Task<ICollection<FeedPost>> GetAllAsync(long startfrom, int teamId = 0, int limit = 10, CancellationToken ct = default);
         Task<FeedPost> GetByIdAsync(int feedPostId, CancellationToken ct = default);
         Task ToggleLikeForPostAsync(int feedPostId, string userUUID, CancellationToken ct = default);
         Task<bool> HasUserLikedPostAsync(string userUUID, int feedPostId, CancellationToken ct = default);
@@ -32,6 +32,9 @@ namespace GaryPortalAPI.Services
         Task<AditLogUrlResult> UploadAditLogMediaAsync(IFormFile aditLog, IFormFile thumbnail = null, CancellationToken ct = default);
         Task<AditLog> UploadNewAditLogAsync(AditLog aditLog, CancellationToken ct = default);
         Task WatchAditLogAsync(int aditLogId, string userUUID, CancellationToken ct = default);
+
+        Task ReportPostAsync(FeedReport report, CancellationToken ct = default);
+        Task MarkReportAsDeletedAsync(int reportId, CancellationToken ct = default);
     }
 
     public class FeedService : IFeedService
@@ -48,7 +51,7 @@ namespace GaryPortalAPI.Services
             await _context.DisposeAsync();
         }
 
-        public async Task<ICollection<FeedPost>> GetAllAsync(long startfrom, int limit = 10, CancellationToken ct = default)
+        public async Task<ICollection<FeedPost>> GetAllAsync(long startfrom, int teamId = 0, int limit = 10, CancellationToken ct = default)
         {
             DateTime fromDate = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddMilliseconds(startfrom);
             Console.WriteLine(fromDate.ToString());
@@ -60,10 +63,11 @@ namespace GaryPortalAPI.Services
                 .Include(fp => fp.Comments)
                     .ThenInclude(fpp => fpp.User)
                 .If(fp => fp.PostType.Equals("poll"), fp => fp.Include(fp => ((FeedPollPost)fp).PollAnswers).ThenInclude(fpa => fpa.Votes.Where(fpv => !fpv.IsDeleted)))
-                .Where(fp => fp.PostCreatedAt >= fromDate && !fp.IsDeleted)
+                .Where(fp => fp.PostCreatedAt >= fromDate && !fp.IsDeleted && (teamId == 0 || fp.PostIsGlobal || fp.TeamId == teamId))
                 .OrderByDescending(fp => fp.PostCreatedAt)
                 .Take(10)
                 .ToListAsync(ct);
+
             foreach (FeedPost post in posts)
             {
                 post.PosterDTO = post.Poster.ConvertToDTO();
@@ -273,6 +277,23 @@ namespace GaryPortalAPI.Services
                 await _context.SaveChangesAsync(ct);
             }
             return;
+        }
+
+        public async Task ReportUserAsync(FeedReport report, CancellationToken ct = default)
+        {
+            await _context.FeedReports.AddAsync(report);
+            await _context.SaveChangesAsync(ct);
+        }
+
+        public async Task MarkReportAsDeletedAsync(int reportId, CancellationToken ct = default)
+        {
+            FeedReport report = await _context.FeedReports.FindAsync(reportId);
+            if (report != null)
+            {
+                report.IsDeleted = true;
+                _context.Update(report);
+                await _context.SaveChangesAsync();
+            }
         }
     }
 }

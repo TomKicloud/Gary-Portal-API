@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using GaryPortalAPI.Models;
 using GaryPortalAPI.Models.Feed;
 using GaryPortalAPI.Services;
 using GaryPortalAPI.Utilities;
@@ -33,7 +34,7 @@ namespace GaryPortalAPI.Controllers
             {
                 startfrom = DateTime.UtcNow.Millisecond;
             }
-            return Ok(await _feedService.GetAllAsync(startfrom, limit, ct));
+            return Ok(await _feedService.GetAllAsync(startfrom, limit, teamId, ct));
         }
 
         [HttpGet("{feedPostId}")]
@@ -139,6 +140,13 @@ namespace GaryPortalAPI.Controllers
             if (!AuthenticationUtilities.IsSameUser(User, userUUID))
                 Unauthorized("You do not have access to mark this adit log as watched");
             await _feedService.WatchAditLogAsync(aditLogId, userUUID, ct);
+            return Ok();
+        }
+
+        [HttpPost("ReportPost/{postId}")]
+        public async Task<IActionResult> ReportUser([FromBody] FeedReport report, CancellationToken ct = default)
+        {
+            await _feedService.ReportPostAsync(report, ct);
             return Ok();
         }
     }

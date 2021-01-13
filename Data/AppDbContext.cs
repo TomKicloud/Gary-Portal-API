@@ -16,8 +16,14 @@ public class AppDbContext : DbContext
     public DbSet<UserRefreshToken> UserRefreshTokens { get; set; }
     public DbSet<UserPoints> UserPoints { get; set; }
     public DbSet<UserRanks> UserRanks { get; set; }
-    //public DbSet<UserBans> UserBans { get; set; }
     public DbSet<UserTeam> UserTeams { get; set; }
+    public DbSet<UserBlock> UserBlocks { get; set; }
+
+    public DbSet<BanType> BanTypes { get; set; }
+    public DbSet<UserBan> UserBans { get; set; }
+
+    public DbSet<UserReport> UserReports { get; set; }
+    public DbSet<FeedReport> FeedReports { get; set; }
 
     public DbSet<FeedPost> FeedPosts { get; set; }
     public DbSet<FeedMediaPost> FeedMediaPosts { get; set; }
@@ -65,7 +71,26 @@ public class AppDbContext : DbContext
                 .OnDelete(DeleteBehavior.Cascade)
                 .IsRequired();
 
-            // TODO: Bans architecture
+            entity
+                .HasMany(u => u.UserBans)
+                .WithOne(b => b.BannedUser)
+                .HasForeignKey(b => b.UserUUID)
+                .OnDelete(DeleteBehavior.Cascade)
+                .IsRequired();
+
+            entity
+                .HasMany(u => u.UsersBannedByMeAsPrivileged)
+                .WithOne(b => b.BannedBy)
+                .HasForeignKey(b => b.BannedByUUID)
+                .OnDelete(DeleteBehavior.Cascade)
+                .IsRequired();
+
+            entity
+                .HasMany(u => u.BlockedUsers)
+                .WithOne(bu => bu.BlockerUser)
+                .HasForeignKey(bu => bu.BlockerUserUUID)
+                .OnDelete(DeleteBehavior.Cascade)
+                .IsRequired();
 
             entity
                 .HasOne(u => u.UserTeam)
@@ -111,6 +136,27 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<UserTeam>(entity =>
         {
             entity.HasKey(ut => ut.UserUUID);
+        });
+
+        modelBuilder.Entity<UserBan>(entity =>
+        {
+            entity
+                .HasOne(b => b.BanType)
+                .WithMany(bt => bt.UserBans)
+                .HasForeignKey(b => b.BanTypeId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .IsRequired();
+        });
+
+        modelBuilder.Entity<UserBlock>(entity =>
+        {
+            entity.HasKey(ub => new { ub.BlockerUserUUID, ub.BlockedUserUUID } );
+            entity
+                .HasOne(ub => ub.BlockedUser)
+                .WithMany()
+                .HasForeignKey(ub => ub.BlockedUserUUID)
+                .OnDelete(DeleteBehavior.Cascade)
+                .IsRequired();
         });
 
         #endregion User
@@ -234,6 +280,39 @@ public class AppDbContext : DbContext
                 .WithMany(t => t.AditLogs)
                 .HasForeignKey(al => al.AditLogTeamId)
                 .OnDelete(DeleteBehavior.Cascade)
+                .IsRequired();
+        });
+
+        #endregion
+
+        #region Reports
+
+        modelBuilder.Entity<UserReport>(entity =>
+        {
+            entity
+                .HasOne(ur => ur.ReportedUser)
+                .WithMany()
+                .HasForeignKey(ur => ur.UserUUID)
+                .IsRequired();
+
+            entity
+                .HasOne(ur => ur.Reporter)
+                .WithMany()
+                .HasForeignKey(ur => ur.ReportByUUID)
+                .IsRequired();
+        });
+
+        modelBuilder.Entity<FeedReport>(entity =>
+        {
+            entity
+                .HasOne(fr => fr.ReportedPost)
+                .WithMany()
+                .HasForeignKey(fr => fr.FeedPostId)
+                .IsRequired();
+            entity
+                .HasOne(fr => fr.Reporter)
+                .WithMany()
+                .HasForeignKey(fr => fr.ReportByUUID)
                 .IsRequired();
         });
 

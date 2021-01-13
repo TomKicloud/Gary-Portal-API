@@ -2,14 +2,16 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace GaryPortalAPI.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20210112165656_UserBlocks+Bans")]
+    partial class UserBlocksBans
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -203,37 +205,6 @@ namespace GaryPortalAPI.Migrations
                     b.ToTable("FeedPosts");
 
                     b.HasDiscriminator<string>("PostType").HasValue("base");
-                });
-
-            modelBuilder.Entity("GaryPortalAPI.Models.FeedReport", b =>
-                {
-                    b.Property<int>("FeedReportId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    b.Property<int>("FeedPostId")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("tinyint(1)");
-
-                    b.Property<string>("ReportByUUID")
-                        .IsRequired()
-                        .HasColumnType("varchar(255)");
-
-                    b.Property<DateTime>("ReportIssuedAt")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<string>("ReportReason")
-                        .HasColumnType("longtext");
-
-                    b.HasKey("FeedReportId");
-
-                    b.HasIndex("FeedPostId");
-
-                    b.HasIndex("ReportByUUID");
-
-                    b.ToTable("FeedReports");
                 });
 
             modelBuilder.Entity("GaryPortalAPI.Models.Rank", b =>
@@ -475,38 +446,6 @@ namespace GaryPortalAPI.Migrations
                     b.ToTable("UserRefreshTokens");
                 });
 
-            modelBuilder.Entity("GaryPortalAPI.Models.UserReport", b =>
-                {
-                    b.Property<int>("UserReportId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("tinyint(1)");
-
-                    b.Property<string>("ReportByUUID")
-                        .IsRequired()
-                        .HasColumnType("varchar(255)");
-
-                    b.Property<DateTime>("ReportIssuedAt")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<string>("ReportReason")
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("UserUUID")
-                        .IsRequired()
-                        .HasColumnType("varchar(255)");
-
-                    b.HasKey("UserReportId");
-
-                    b.HasIndex("ReportByUUID");
-
-                    b.HasIndex("UserUUID");
-
-                    b.ToTable("UserReports");
-                });
-
             modelBuilder.Entity("GaryPortalAPI.Models.UserTeam", b =>
                 {
                     b.Property<string>("UserUUID")
@@ -651,25 +590,6 @@ namespace GaryPortalAPI.Migrations
                     b.Navigation("PostTeam");
                 });
 
-            modelBuilder.Entity("GaryPortalAPI.Models.FeedReport", b =>
-                {
-                    b.HasOne("GaryPortalAPI.Models.Feed.FeedPost", "ReportedPost")
-                        .WithMany()
-                        .HasForeignKey("FeedPostId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("GaryPortalAPI.Models.User", "Reporter")
-                        .WithMany()
-                        .HasForeignKey("ReportByUUID")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("ReportedPost");
-
-                    b.Navigation("Reporter");
-                });
-
             modelBuilder.Entity("GaryPortalAPI.Models.UserAuthentication", b =>
                 {
                     b.HasOne("GaryPortalAPI.Models.User", "User")
@@ -774,25 +694,6 @@ namespace GaryPortalAPI.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("GaryPortalAPI.Models.UserReport", b =>
-                {
-                    b.HasOne("GaryPortalAPI.Models.User", "Reporter")
-                        .WithMany()
-                        .HasForeignKey("ReportByUUID")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("GaryPortalAPI.Models.User", "ReportedUser")
-                        .WithMany()
-                        .HasForeignKey("UserUUID")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("ReportedUser");
-
-                    b.Navigation("Reporter");
                 });
 
             modelBuilder.Entity("GaryPortalAPI.Models.UserTeam", b =>

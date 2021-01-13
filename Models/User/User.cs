@@ -49,7 +49,9 @@ namespace GaryPortalAPI.Models
         public virtual UserTeam UserTeam { get; set; }
         public virtual UserRanks UserRanks { get; set; }
         public virtual UserPoints UserPoints { get; set; }
-        //public virtual UserBans UserBans { get; set; }
+        public virtual ICollection<UserBan> UserBans { get; set; }
+        public virtual ICollection<UserBan> UsersBannedByMeAsPrivileged { get; set; }
+        public virtual ICollection<UserBlock> BlockedUsers { get; set; }
 
         public virtual ICollection<UserRefreshToken> UserRefreshTokens { get; set; }
         public virtual ICollection<FeedPost> FeedPosts { get; set; }
@@ -69,6 +71,8 @@ namespace GaryPortalAPI.Models
                 UserProfileImageUrl = UserProfileImageUrl,
             };
         }
+
+      
 
     }
 
@@ -105,14 +109,36 @@ namespace GaryPortalAPI.Models
         public virtual User User { get; set; }
     }
 
-    public class UserBans
+    public class UserBan
     {
+        public int UserBanId { get; set; }
         public string UserUUID { get; set; }
-        public bool IsBanned { get; set; }
-        public bool IsChatBanned { get; set; }
-        public bool IsFeedBanned { get; set; }
+        public DateTime BanIssued { get; set; }
+        public DateTime BanExpires { get; set; }
+        public int BanTypeId { get; set; }
         public string BanReason { get; set; }
+        public string BannedByUUID { get; set; }
 
-        public virtual User User { get; set; }
+        public virtual User BannedUser { get; set; }
+        public virtual BanType BanType { get; set; }
+        public virtual User BannedBy { get; set; }
+    }
+
+    public class BanType
+    {
+        public int BanTypeId { get; set; }
+        public string BanTypeName { get; set; }
+
+        public virtual ICollection<UserBan> UserBans { get; set; }
+    }
+
+    public class UserBlock
+    {
+        public string BlockerUserUUID { get; set; }
+        public string BlockedUserUUID { get; set; }
+        public bool IsBlocked { get; set; }
+
+        public virtual User BlockerUser { get; set; }
+        public virtual User BlockedUser { get; set; }
     }
 }
