@@ -229,15 +229,28 @@ namespace GaryPortalAPI.Services
 
         public async Task<UserBlock> BlockUserAsync(string uuid, string blockedUUID, CancellationToken ct = default)
         {
-            UserBlock block = new UserBlock
+
+            if (await _context.UserBlocks.FindAsync(uuid, blockedUUID) != null)
             {
-                BlockerUserUUID = uuid,
-                BlockedUserUUID = blockedUUID,
-                IsBlocked = true
-            };
-            await _context.AddAsync(block, ct);
-            await _context.SaveChangesAsync(ct);
-            return block;
+                UserBlock block = await _context.UserBlocks.FindAsync(uuid, blockedUUID);
+                block.IsBlocked = true;
+                _context.Update(block);
+                await _context.SaveChangesAsync(ct);
+                return block;
+            }
+            else
+            {
+                UserBlock block = new UserBlock
+                {
+                    BlockerUserUUID = uuid,
+                    BlockedUserUUID = blockedUUID,
+                    IsBlocked = true
+                };
+
+                await _context.AddAsync(block, ct);
+                await _context.SaveChangesAsync(ct);
+                return block;
+            }         
         }
 
         public async Task UnblockUserAsync(string uuid, string blockedUUID, CancellationToken ct = default)
