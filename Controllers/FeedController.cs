@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using GaryPortalAPI.Models;
@@ -34,7 +35,7 @@ namespace GaryPortalAPI.Controllers
             {
                 startfrom = DateTime.UtcNow.Millisecond;
             }
-            return Ok(await _feedService.GetAllAsync(startfrom, limit, teamId, ct));
+            return Ok(await _feedService.GetAllAsync(startfrom, teamId, limit, ct));
         }
 
         [HttpGet("{feedPostId}")]
@@ -51,6 +52,41 @@ namespace GaryPortalAPI.Controllers
                 return Unauthorized("You do not have access to Like for this user");
 
             await _feedService.ToggleLikeForPostAsync(feedPostId, userUUID, ct);
+            return Ok();
+        }
+
+
+        [HttpGet("GetCommentsForPost/{postId}")]
+        [Produces(typeof(ICollection<FeedComment>))]
+        public async Task<IActionResult> GetCommentsForPost(int postId, CancellationToken ct = default)
+        {
+            return Ok(await _feedService.GetCommentsForPostAsync(postId, ct));
+        }
+
+        [HttpGet("GetComment/{commentId}")]
+        [Produces(typeof(FeedComment))]
+        public async Task<IActionResult> GetComment(int commentId, CancellationToken ct = default)
+        {
+            return Ok(await _feedService.GetCommentByIdAsync(commentId, ct));
+        }
+
+        [HttpPost("CommentOnPost")]
+        public async Task<IActionResult> CommentOnPost([FromBody] FeedComment comment, CancellationToken ct = default)
+        {
+            if (!AuthenticationUtilities.IsSameUser(User, comment.UserUUID))
+                return Unauthorized("You do not have access to comment for this user");
+
+            return Ok(await _feedService.AddCommentToPostAsync(comment, ct));
+        }
+
+        [HttpPut("DeleteComment/{commentId}")]
+        public async Task<IActionResult> DeleteComment(int commentId, CancellationToken ct = default)
+        {
+            FeedComment comment = await _feedService.GetCommentByIdAsync(commentId, ct);
+            if (!AuthenticationUtilities.IsSameUserOrPrivileged(User, comment.UserUUID))
+                return Unauthorized("You do not have access to delete this comment");
+
+            await _feedService.MarkFeedCommentAsDeletedAsync(commentId, ct);
             return Ok();
         }
 

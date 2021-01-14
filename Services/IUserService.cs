@@ -175,6 +175,8 @@ namespace GaryPortalAPI.Services
                     UserIsAdmin = false,
                     UserIsStaff = false,
                     IsQueued = true,
+                    UserGender = creatingUser.UserGender,
+                    UserDateOfBirth = creatingUser.UserDOB,
                     UserAuthentication = new UserAuthentication
                     {
                         UserEmail = creatingUser.UserEmail,

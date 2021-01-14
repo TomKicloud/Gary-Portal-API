@@ -16,5 +16,11 @@ namespace GaryPortalAPI.Models
 
         [Required]
         public string UserPassword { get; set; }
+
+        [Required]
+        public string UserGender { get; set; }
+
+        [Required]
+        public DateTime UserDOB { get; set; }
     }
 }

@@ -26,6 +26,11 @@ namespace GaryPortalAPI.Services
         Task MarkPostAsDeletedAsync(int feedPostId, CancellationToken ct = default);
         Task VoteForPollAsync(string userUUID, int feedPollAnswerId, bool voteFor = true, CancellationToken ct = default);
 
+        Task<ICollection<FeedComment>> GetCommentsForPostAsync(int postId, CancellationToken ct = default);
+        Task<FeedComment> GetCommentByIdAsync(int commentId, CancellationToken ct = default);
+        Task<FeedComment> AddCommentToPostAsync(FeedComment comment, CancellationToken ct = default);
+        Task MarkFeedCommentAsDeletedAsync(int feedCommentId, CancellationToken ct = default);
+
         Task<ICollection<AditLog>> GetAllAditLogsAsync(int teamId = 0, CancellationToken ct = default);
         Task<AditLog> GetAditLogAsync(int aditLogId, CancellationToken ct = default);
         Task MarkAditLogAsDeletedAsync(int aditLogId, CancellationToken ct = default);
@@ -54,7 +59,6 @@ namespace GaryPortalAPI.Services
         public async Task<ICollection<FeedPost>> GetAllAsync(long startfrom, int teamId = 0, int limit = 10, CancellationToken ct = default)
         {
             DateTime fromDate = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddMilliseconds(startfrom);
-            Console.WriteLine(fromDate.ToString());
             ICollection<FeedPost> posts = await _context.FeedPosts
                 .AsNoTracking()
                 .Include(fp => fp.Likes.Where(fl => fl.IsLiked))
@@ -62,8 +66,9 @@ namespace GaryPortalAPI.Services
                 .Include(fp => fp.PostTeam)
                 .Include(fp => fp.Comments)
                     .ThenInclude(fpp => fpp.User)
-                .If(fp => fp.PostType.Equals("poll"), fp => fp.Include(fp => ((FeedPollPost)fp).PollAnswers).ThenInclude(fpa => fpa.Votes.Where(fpv => !fpv.IsDeleted)))
-                .Where(fp => fp.PostCreatedAt >= fromDate && !fp.IsDeleted && (teamId == 0 || fp.PostIsGlobal || fp.TeamId == teamId))
+                .Include(fp => ((FeedPollPost)fp).PollAnswers)
+                    .ThenInclude(fpa => fpa.Votes.Where(fpv => !fpv.IsDeleted))
+                .Where(fp => fp.PostCreatedAt <= fromDate && !fp.IsDeleted && (teamId == 0 || fp.PostIsGlobal || fp.TeamId == teamId))
                 .OrderByDescending(fp => fp.PostCreatedAt)
                 .Take(10)
                 .ToListAsync(ct);
@@ -72,6 +77,12 @@ namespace GaryPortalAPI.Services
             {
                 post.PosterDTO = post.Poster.ConvertToDTO();
                 post.Poster = null;
+
+                foreach (FeedComment comment in post.Comments)
+                {
+                    comment.UserDTO = comment.User.ConvertToDTO();
+                    comment.User = null;
+                }
             }
             return posts;
         }
@@ -85,10 +96,17 @@ namespace GaryPortalAPI.Services
                 .Include(fp => fp.PostTeam)
                 .Include(fp => fp.Comments)
                     .ThenInclude(fpp => fpp.User)
-                .If(fp => fp.PostType.Equals("poll"), fp => fp.Include(fp => ((FeedPollPost)fp).PollAnswers).ThenInclude(fpa => fpa.Votes.Where(fpv => !fpv.IsDeleted)))
+                .Include(fp => ((FeedPollPost)fp).PollAnswers)
+                    .ThenInclude(fpa => fpa.Votes.Where(fpv => !fpv.IsDeleted))
                 .FirstOrDefaultAsync(fp => fp.PostId == feedPostId, ct);
+            Console.WriteLine(post.PostType);
             post.PosterDTO = post.Poster.ConvertToDTO();
             post.Poster = null;
+            foreach (FeedComment comment in post.Comments)
+            {
+                comment.UserDTO = comment.User.ConvertToDTO();
+                comment.User = null;
+            }
             return post;
         }
 
@@ -168,6 +186,32 @@ namespace GaryPortalAPI.Services
             FeedPost post = await _context.FeedPosts.FindAsync(feedPostId);
             post.IsDeleted = true;
             _context.Update(post);
+            await _context.SaveChangesAsync(ct);
+        }
+
+
+        public async Task<ICollection<FeedComment>> GetCommentsForPostAsync(int postId, CancellationToken ct = default)
+        {
+            return await _context.FeedPostComments.Where(fc => fc.PostId == postId).ToListAsync(ct);
+        }
+
+        public async Task<FeedComment> GetCommentByIdAsync(int commentId, CancellationToken ct = default)
+        {
+            return await _context.FeedPostComments.FindAsync(commentId);
+        }
+
+        public async Task<FeedComment> AddCommentToPostAsync(FeedComment comment, CancellationToken ct = default)
+        {
+            await _context.FeedPostComments.AddAsync(comment, ct);
+            await _context.SaveChangesAsync(ct);
+            return comment;
+        }
+
+        public async Task MarkFeedCommentAsDeletedAsync(int feedCommentId, CancellationToken ct = default)
+        {
+            FeedComment comment = await _context.FeedPostComments.FindAsync(feedCommentId);
+            comment.IsDeleted = true;
+            _context.Update(comment);
             await _context.SaveChangesAsync(ct);
         }
 
