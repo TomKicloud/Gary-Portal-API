@@ -37,6 +37,13 @@ namespace GaryPortalAPI.Controllers
             return Ok(await _userRepository.GetByIdAsync(uuid, ct));
         }
 
+        [HttpGet("CurrentUser")]
+        [Produces(typeof(User))]
+        public async Task<IActionResult> GetCurrentUser(CancellationToken ct = default)
+        {
+            return Ok(await _userRepository.GetByIdAsync(AuthenticationUtilities.GetUUIDFromIdentity(User), ct));
+        }
+
         [AllowAnonymous]
         [HttpGet("IsUsernameFree/{username}")]
         [Produces(typeof(bool))]
