@@ -13,7 +13,7 @@ namespace GaryPortalAPI.Services
 {
     public interface IUserService : IDisposable
     {
-        Task<ICollection<User>> GetAllAsync(CancellationToken ct = default);
+        Task<ICollection<User>> GetAllAsync(int teamId = 0, CancellationToken ct = default);
         Task<User> GetByIdAsync(string userUUID, CancellationToken ct = default);
         Task<bool> IsUsernameFreeAsync(string username, CancellationToken ct = default);
         Task<bool> IsEmailFreeAsync(string email, CancellationToken ct = default);
@@ -51,7 +51,7 @@ namespace GaryPortalAPI.Services
             _context.Dispose();
         }
 
-        public async Task<ICollection<User>> GetAllAsync(CancellationToken ct = default)
+        public async Task<ICollection<User>> GetAllAsync(int teamId = 0, CancellationToken ct = default)
         {
             return await _context.Users
                 .AsNoTracking()
@@ -59,7 +59,7 @@ namespace GaryPortalAPI.Services
                 .Include(u => u.UserPoints)
                 .Include(u => u.UserRanks)
                 .Include(u => u.UserTeam)
-                .Where(u => !u.IsDeleted)
+                .Where(u => !u.IsDeleted && (teamId == 0 || u.UserTeam.TeamId == teamId))
                 .ToListAsync(ct);
         }
 
