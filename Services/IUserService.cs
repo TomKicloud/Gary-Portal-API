@@ -134,6 +134,7 @@ namespace GaryPortalAPI.Services
             user.UserName = details.UserName;
             user.UserFullName = details.FullName;
             user.UserProfileImageUrl = details.ProfilePictureUrl;
+            _context.Update(user);
             await _context.SaveChangesAsync(ct);
             return user;
         }
