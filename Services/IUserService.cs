@@ -95,6 +95,7 @@ namespace GaryPortalAPI.Services
         public async Task<UserPoints> UpdatePointsForUserAsync(string uuid, UserPoints points, CancellationToken ct = default)
         {
             UserPoints userpoints = await _context.UserPoints
+                .AsNoTracking()
                 .FirstOrDefaultAsync(u => u.UserUUID == uuid);
             if (userpoints != null)
             {
