@@ -27,7 +27,7 @@ namespace GaryPortalAPI.Controllers
         [Produces(typeof(ICollection<User>))]
         public async Task<IActionResult> GetAllUsers(int teamId = 0, CancellationToken ct = default)
         {
-            return Ok(await _userRepository.GetAllAsync(ct));
+            return Ok(await _userRepository.GetAllAsync(teamId, ct));
         }
 
         [HttpGet("{uuid}")]
