@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using GaryPortalAPI.Models;
 using GaryPortalAPI.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
@@ -16,10 +17,12 @@ namespace GaryPortalAPI.Controllers
     {
 
         private readonly IUserService _userService;
+        private readonly IStaffService _staffService;
 
-        public AdminController(IUserService userService)
+        public AdminController(IUserService userService, IStaffService staffService)
         {
             _userService = userService;
+            _staffService = staffService;
         }
     
 
@@ -38,5 +41,18 @@ namespace GaryPortalAPI.Controllers
 
         }
 
+
+        [HttpPost("PostStaffAnnouncement")]
+        public async Task<IActionResult> PostStaffAnnouncement([FromBody] StaffRoomAnnouncement announcement, CancellationToken ct = default)
+        {
+            return Ok(await _staffService.PostStaffRoomAnnouncementAsync(announcement, ct));
+        }
+
+        [HttpPut("MarkAnnouncementAsDeleted/{id}")]
+        public async Task<IActionResult> MarkAnnouncementAsDeleted(int id, CancellationToken ct = default)
+        {
+            await _staffService.MarkAnnouncementAsDeletedAsync(id, ct);
+            return Ok();
+        }
     }
 }

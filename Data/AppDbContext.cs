@@ -34,6 +34,8 @@ public class AppDbContext : DbContext
     public DbSet<FeedPollAnswer> FeedPollAnswers { get; set; }
     public DbSet<AditLog> FeedAditLogs { get; set; }
 
+    public DbSet<StaffRoomAnnouncement> StaffRoomAnnouncements { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         #region User
@@ -314,6 +316,23 @@ public class AppDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(fr => fr.ReportByUUID)
                 .IsRequired();
+        });
+
+        #endregion
+
+        #region Staff Room
+
+        modelBuilder.Entity<StaffRoomAnnouncement>(entity =>
+        {
+            entity.HasKey(sra => sra.AnnouncementId);
+            entity.Property(sra => sra.AnnouncementId)
+                .ValueGeneratedOnAdd();
+
+            entity
+                .HasOne(sra => sra.User)
+                .WithMany()
+                .HasForeignKey(sra => sra.UserUUID);
+            entity.Ignore(sra => sra.UserDTO);
         });
 
         #endregion

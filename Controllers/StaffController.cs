@@ -21,11 +21,13 @@ namespace GaryPortalAPI.Controllers
     {
         private readonly IUserService _userService;
         private readonly IFeedService _feedService;
+        private readonly IStaffService _staffService;
 
-        public StaffController(IUserService userService, IFeedService feedService)
+        public StaffController(IUserService userService, IFeedService feedService, IStaffService staffService)
         {
             _userService = userService;
             _feedService = feedService;
+            _staffService = staffService;
         }
 
         [HttpPost("BanUser")]
@@ -55,6 +57,13 @@ namespace GaryPortalAPI.Controllers
         {
             await _feedService.MarkReportAsDeletedAsync(reportId, ct);
             return Ok();
+        }
+
+        [HttpGet("GetStaffRoomAnnouncements")]
+        [Produces(typeof(ICollection<StaffRoomAnnouncement>))]
+        public async Task<IActionResult> GetStaffRoomAnnouncements(CancellationToken ct = default)
+        {
+            return Ok(await _staffService.GetStaffRoomAnnouncementsAsync(ct));
         }
     }
 }
