@@ -16,6 +16,7 @@ namespace GaryPortalAPI.Services
         Task<StaffRoomAnnouncement> GetStaffRoomAnnouncementAsync(int id, CancellationToken ct = default);
         Task<StaffRoomAnnouncement> PostStaffRoomAnnouncementAsync(StaffRoomAnnouncement announcement, CancellationToken ct = default);
         Task MarkAnnouncementAsDeletedAsync(int id, CancellationToken ct = default);
+        Task<ICollection<Team>> GetAllTeams(CancellationToken ct = default);
     }
 
     public class StaffService : IStaffService
@@ -74,6 +75,11 @@ namespace GaryPortalAPI.Services
             await _context.StaffRoomAnnouncements.AddAsync(announcement, ct);
             await _context.SaveChangesAsync();
             return await GetStaffRoomAnnouncementAsync(announcement.AnnouncementId, ct);
+        }
+
+        public async Task<ICollection<Team>> GetAllTeams(CancellationToken ct = default)
+        {
+            return await _context.Teams.ToListAsync(ct);
         }
     }
 }

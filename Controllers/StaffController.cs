@@ -65,5 +65,12 @@ namespace GaryPortalAPI.Controllers
         {
             return Ok(await _staffService.GetStaffRoomAnnouncementsAsync(ct));
         }
+
+        [HttpGet("GetTeams")]
+        [Produces(typeof(ICollection<Team>))]
+        public async Task<IActionResult> GetAllTeams(CancellationToken ct = default)
+        {
+            return Ok(await _staffService.GetAllTeams(ct));
+        }
     }
 }
