@@ -72,5 +72,12 @@ namespace GaryPortalAPI.Controllers
         {
             return Ok(await _staffService.GetAllTeams(ct));
         }
+
+        [HttpGet("GetBanTypes")]
+        [Produces(typeof(ICollection<BanType>))]
+        public async Task<IActionResult> GetBanTypes(CancellationToken ct = default)
+        {
+            return Ok(await _staffService.GetAllBanTypesAsync(ct));
+        }
     }
 }
