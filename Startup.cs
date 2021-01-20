@@ -1,4 +1,4 @@
-using System;
+    using System;
 using System.Text;
 using GaryPortalAPI.Data;
 using GaryPortalAPI.Services;
@@ -28,7 +28,11 @@ namespace GaryPortalAPI
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers()
-                .AddNewtonsoftJson(option => option.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore);
+                .AddNewtonsoftJson(option => {
+
+                    option.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
+                    option.SerializerSettings.DateFormatString = "yyyy-MM-dd HH:mm:ss";
+                });
 
             services.AddDbContext<AppDbContext>(o =>
             {
