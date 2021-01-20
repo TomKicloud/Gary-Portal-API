@@ -79,5 +79,12 @@ namespace GaryPortalAPI.Controllers
         {
             return Ok(await _staffService.GetAllBanTypesAsync(ct));
         }
+
+        [HttpGet("GetRanks")]
+        [Produces(typeof(ICollection<Rank>))]
+        public async Task<IActionResult> GetRanks(CancellationToken ct = default)
+        {
+            return Ok(await _staffService.GetAllRanksAsync(ct));
+        }
     }
 }

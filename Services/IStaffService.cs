@@ -18,6 +18,7 @@ namespace GaryPortalAPI.Services
         Task MarkAnnouncementAsDeletedAsync(int id, CancellationToken ct = default);
         Task<ICollection<Team>> GetAllTeams(CancellationToken ct = default);
         Task<ICollection<BanType>> GetAllBanTypesAsync(CancellationToken ct = default);
+        Task<ICollection<Rank>> GetAllRanksAsync(CancellationToken ct = default);
     }
 
     public class StaffService : IStaffService
@@ -86,6 +87,11 @@ namespace GaryPortalAPI.Services
         public async Task<ICollection<BanType>> GetAllBanTypesAsync(CancellationToken ct = default)
         {
             return await _context.BanTypes.ToListAsync(ct);
+        }
+
+        public async Task<ICollection<Rank>> GetAllRanksAsync(CancellationToken ct = default)
+        {
+            return await _context.Ranks.ToListAsync(ct);
         }
     }
 }
