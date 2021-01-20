@@ -60,7 +60,8 @@ namespace GaryPortalAPI.Services
                 .Include(u => u.UserRanks)
                 .Include(u => u.UserTeam)
                     .ThenInclude(ut => ut.Team)
-                .Include(u => u.UserBans)
+                .Include(u => u.UserBans.Where(ub => ub.BanExpires > DateTime.UtcNow))
+                    .ThenInclude(ub => ub.BanType)
                 .Where(u => !u.IsDeleted && (teamId == 0 || u.UserTeam.TeamId == teamId))
                 .ToListAsync(ct);
         }
@@ -75,7 +76,8 @@ namespace GaryPortalAPI.Services
                 .Include(u => u.UserTeam)
                     .ThenInclude(ut => ut.Team)
                 .Include(u => u.BlockedUsers.Where(bu => bu.IsBlocked))
-                .Include(u => u.UserBans)
+                .Include(u => u.UserBans.Where(ub => ub.BanExpires > DateTime.UtcNow))
+                    .ThenInclude(ub => ub.BanType)
                 .FirstOrDefaultAsync(u => u.UserUUID == userUUID, ct);
         }
 
