@@ -8,6 +8,8 @@ using GaryPortalAPI.Models;
 using GaryPortalAPI.Services.Authentication;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using RestSharp;
+
 namespace GaryPortalAPI.Services
 {
     public interface IStaffService : IDisposable
@@ -19,6 +21,7 @@ namespace GaryPortalAPI.Services
         Task<ICollection<Team>> GetAllTeams(CancellationToken ct = default);
         Task<ICollection<BanType>> GetAllBanTypesAsync(CancellationToken ct = default);
         Task<ICollection<Rank>> GetAllRanksAsync(CancellationToken ct = default);
+        Task<Joke> GetRandomJoke(CancellationToken ct = default);
     }
 
     public class StaffService : IStaffService
@@ -96,6 +99,13 @@ namespace GaryPortalAPI.Services
             return await _context.Ranks.ToListAsync(ct);
         }
 
+        public async Task<Joke> GetRandomJoke(CancellationToken ct = default)
+        {
+            RestClient client = new RestClient("https://official-joke-api.appspot.com/");
+            RestRequest request = new RestRequest("jokes/random", Method.GET);
+            var joke = await client.ExecuteAsync<Joke>(request);
+            return joke.Data;
+        }
        
     }
 }

@@ -93,5 +93,12 @@ namespace GaryPortalAPI.Controllers
         {
             return Ok(await _staffService.GetAllRanksAsync(ct));
         }
+
+        [HttpGet("Joke")]
+        [Produces(typeof(Joke))]
+        public async Task<IActionResult> GetJoke(CancellationToken ct = default)
+        {
+            return Ok(await _staffService.GetRandomJoke(ct));
+        }
     }
 }
