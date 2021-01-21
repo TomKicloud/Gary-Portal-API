@@ -54,5 +54,12 @@ namespace GaryPortalAPI.Controllers
             await _staffService.MarkAnnouncementAsDeletedAsync(id, ct);
             return Ok();
         }
+
+        [HttpGet("QueuedUsers")]
+        [Produces(typeof(ICollection<User>))]
+        public async Task<IActionResult> GetQueuedUsers(CancellationToken ct = default)
+        {
+            return Ok(await _userService.GetAllQueuedAsync(ct));
+        }
     }
 }

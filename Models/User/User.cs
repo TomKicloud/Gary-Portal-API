@@ -83,9 +83,6 @@ namespace GaryPortalAPI.Models
                 UserProfileImageUrl = UserProfileImageUrl,
             };
         }
-
-      
-
     }
 
     public class UserTeam

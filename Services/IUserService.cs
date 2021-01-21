@@ -13,7 +13,8 @@ namespace GaryPortalAPI.Services
 {
     public interface IUserService : IDisposable
     {
-        Task<ICollection<User>> GetAllAsync(int teamId = 0, CancellationToken ct = default);
+        Task<ICollection<User>> GetAllAsync(int teamId = 0, bool includeQueued = false, CancellationToken ct = default);
+        Task<ICollection<User>> GetAllQueuedAsync(CancellationToken ct = default);
         Task<User> GetByIdAsync(string userUUID, CancellationToken ct = default);
         Task<bool> IsUsernameFreeAsync(string username, CancellationToken ct = default);
         Task<bool> IsEmailFreeAsync(string email, CancellationToken ct = default);
@@ -52,7 +53,7 @@ namespace GaryPortalAPI.Services
             _context.Dispose();
         }
 
-        public async Task<ICollection<User>> GetAllAsync(int teamId = 0, CancellationToken ct = default)
+        public async Task<ICollection<User>> GetAllAsync(int teamId = 0, bool includeQueue = false, CancellationToken ct = default)
         {
             return await _context.Users
                 .AsNoTracking()
@@ -66,7 +67,25 @@ namespace GaryPortalAPI.Services
                     .ThenInclude(ut => ut.Team)
                 .Include(u => u.UserBans.Where(ub => ub.BanExpires > DateTime.UtcNow))
                     .ThenInclude(ub => ub.BanType)
-                .Where(u => !u.IsDeleted && (teamId == 0 || u.UserTeam.TeamId == teamId))
+                .Where(u => !u.IsDeleted && (teamId == 0 || u.UserTeam.TeamId == teamId) && (includeQueue || !u.IsQueued))
+                .ToListAsync(ct);
+        }
+
+        public async Task<ICollection<User>> GetAllQueuedAsync(CancellationToken ct = default)
+        {
+            return await _context.Users
+                .AsNoTracking()
+                .Include(u => u.UserAuthentication)
+                .Include(u => u.UserPoints)
+                .Include(u => u.UserRanks)
+                    .ThenInclude(u => u.AmigoRank)
+                .Include(u => u.UserRanks)
+                    .ThenInclude(u => u.PositivityRank)
+                .Include(u => u.UserTeam)
+                    .ThenInclude(ut => ut.Team)
+                .Include(u => u.UserBans.Where(ub => ub.BanExpires > DateTime.UtcNow))
+                    .ThenInclude(ub => ub.BanType)
+                .Where(u => !u.IsDeleted && u.IsQueued)
                 .ToListAsync(ct);
         }
 
