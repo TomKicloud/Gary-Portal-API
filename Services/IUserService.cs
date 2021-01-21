@@ -179,6 +179,9 @@ namespace GaryPortalAPI.Services
             user.UserProfileImageUrl = details.ProfilePictureUrl;
             user.UserPoints.AmigoPoints = details.AmigoPoints;
             user.UserPoints.PositivityPoints = details.PositivePoints;
+            user.IsQueued = details.IsQueued;
+
+            await UpdatePointsForUserAsync(uuid, user.UserPoints, ct);
 
             if (user.UserRanks != null)
             {
@@ -198,6 +201,7 @@ namespace GaryPortalAPI.Services
             {
                 TeamId = details.TeamId
             };
+
 
             _context.Update(user);
             await _context.SaveChangesAsync(ct);

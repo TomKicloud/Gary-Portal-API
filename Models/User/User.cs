@@ -35,6 +35,7 @@ namespace GaryPortalAPI.Models
         public int PositivePoints { get; set; }
         public int AmigoRankId { get; set; }
         public int PositiveRankId { get; set; }
+        public bool IsQueued { get; set; }
     }
 
     public class User
