@@ -22,6 +22,7 @@ namespace GaryPortalAPI.Services
         Task ClearAllPrayersAsync(CancellationToken ct = default);
         Task ClearPrayersForUserAsync(string uuid, CancellationToken ct = default);
         Task<User> UpdateUserDetailsAsync(string uuid, UserDetails details, CancellationToken ct = default);
+        Task<User> StaffManageUserDetailsAsync(string uuid, StaffManagedUserDetails details, CancellationToken ct = default);
         Task<string> UpdateUserProfilePictureAsync(string uuid, IFormFile file, CancellationToken ct = default);
         Task<User> CreateNewUserAsync(UserRegistration creatingUser, CancellationToken ct = default);
         Task<ICollection<UserBan>> GetUserCurrentBansAsync(string uuid, CancellationToken ct = default);
@@ -149,6 +150,33 @@ namespace GaryPortalAPI.Services
             _context.Update(user);
             await _context.SaveChangesAsync(ct);
             return user;
+        }
+
+        public async Task<User> StaffManageUserDetailsAsync(string uuid, StaffManagedUserDetails details, CancellationToken ct = default)
+        {
+            User user = await GetByIdAsync(uuid, ct);
+            user.UserName = details.UserName;
+            user.UserSpanishName = details.SpanishName;
+            user.UserProfileImageUrl = details.ProfilePictureUrl;
+            user.UserTeam.TeamId = details.TeamId;
+            user.UserPoints.AmigoPoints = details.AmigoPoints;
+            user.UserPoints.PositivityPoints = details.PositivePoints;
+
+            if (user.UserRanks != null)
+            {
+                _context.UserRanks.Remove(user.UserRanks);
+            }
+
+
+            user.UserRanks = new UserRanks
+            {
+                AmigoRankId = details.AmigoRankId,
+                PositivtyRankId = details.PositiveRankId
+            };
+
+            _context.Update(user);
+            await _context.SaveChangesAsync(ct);
+            return await GetByIdAsync(uuid, ct);
         }
 
 

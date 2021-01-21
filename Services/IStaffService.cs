@@ -19,7 +19,6 @@ namespace GaryPortalAPI.Services
         Task<ICollection<Team>> GetAllTeams(CancellationToken ct = default);
         Task<ICollection<BanType>> GetAllBanTypesAsync(CancellationToken ct = default);
         Task<ICollection<Rank>> GetAllRanksAsync(CancellationToken ct = default);
-        Task<User> StaffManageUserDetailsAsync(string uuid, StaffManagedUserDetails details, CancellationToken ct = default);
     }
 
     public class StaffService : IStaffService
@@ -97,34 +96,6 @@ namespace GaryPortalAPI.Services
             return await _context.Ranks.ToListAsync(ct);
         }
 
-        public async Task<User> StaffManageUserDetailsAsync(string uuid, StaffManagedUserDetails details, CancellationToken ct = default)
-        {
-            User user = await _userService.GetByIdAsync(uuid, ct);
-            user.UserName = details.UserName;
-            user.UserSpanishName = details.SpanishName;
-            user.UserProfileImageUrl = details.ProfilePictureUrl;
-            user.UserTeam.TeamId = details.TeamId;
-            user.UserPoints.AmigoPoints = details.AmigoPoints;
-            user.UserPoints.PositivityPoints = details.PositivePoints;
-
-            if (user.UserRanks == null)
-            {
-                user.UserRanks = new UserRanks
-                {
-                    AmigoRankId = details.AmigoRankId,
-                    PositivtyRankId = details.PositiveRankId
-                };
-
-            }
-            else
-            {
-                user.UserRanks.AmigoRankId = details.AmigoRankId;
-                user.UserRanks.PositivtyRankId = details.PositiveRankId;
-            }
-
-            _context.Update(user);
-            await _context.SaveChangesAsync(ct);
-            return await _userService.GetByIdAsync(uuid, ct);
-        }
+       
     }
 }

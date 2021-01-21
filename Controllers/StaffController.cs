@@ -63,7 +63,7 @@ namespace GaryPortalAPI.Controllers
         [HttpPut("StaffEditUser/{uuid}")]
         public async Task<IActionResult> StaffEditUser(string uuid, [FromBody] StaffManagedUserDetails details, CancellationToken ct = default)
         {
-            return Ok(await _staffService.StaffManageUserDetailsAsync(uuid, details, ct));
+            return Ok(await _userService.StaffManageUserDetailsAsync(uuid, details, ct));
         }
 
         [HttpGet("GetStaffRoomAnnouncements")]
