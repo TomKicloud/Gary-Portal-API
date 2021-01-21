@@ -107,11 +107,21 @@ namespace GaryPortalAPI.Services
             user.UserPoints.AmigoPoints = details.AmigoPoints;
             user.UserPoints.PositivityPoints = details.PositivePoints;
 
-            user.UserRanks = new UserRanks
+            if (user.UserRanks == null)
             {
-                AmigoRankId = details.AmigoRankId,
-                PositivtyRankId = details.PositiveRankId
-            };
+                user.UserRanks = new UserRanks
+                {
+                    AmigoRankId = details.AmigoRankId,
+                    PositivtyRankId = details.PositiveRankId
+                };
+
+            }
+            else
+            {
+                user.UserRanks.AmigoRankId = details.AmigoRankId;
+                user.UserRanks.PositivtyRankId = details.PositiveRankId;
+            }
+
             _context.Update(user);
             await _context.SaveChangesAsync(ct);
             return await _userService.GetByIdAsync(uuid, ct);
