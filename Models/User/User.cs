@@ -25,6 +25,18 @@ namespace GaryPortalAPI.Models
         public string ProfilePictureUrl { get; set; }
     }
 
+    public class StaffManagedUserDetails
+    {
+        public string UserName { get; set; }
+        public string SpanishName { get; set; }
+        public string ProfilePictureUrl { get; set; }
+        public int TeamId { get; set; }
+        public int AmigoPoints { get; set; }
+        public int PositivePoints { get; set; }
+        public int AmigoRankId { get; set; }
+        public int PositiveRankId { get; set; }
+    }
+
     public class User
     {
         public string UserUUID { get; set; }

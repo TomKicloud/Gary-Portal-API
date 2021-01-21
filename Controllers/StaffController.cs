@@ -10,6 +10,7 @@ using GaryPortalAPI.Utilities;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -57,6 +58,12 @@ namespace GaryPortalAPI.Controllers
         {
             await _feedService.MarkReportAsDeletedAsync(reportId, ct);
             return Ok();
+        }
+
+        [HttpPut("StaffEditUser/{uuid}")]
+        public async Task<IActionResult> StaffEditUser(string uuid, [FromBody] StaffManagedUserDetails details, CancellationToken ct = default)
+        {
+            return Ok(await _staffService.StaffManageUserDetailsAsync(uuid, details, ct));
         }
 
         [HttpGet("GetStaffRoomAnnouncements")]

@@ -205,6 +205,11 @@ namespace GaryPortalAPI.Services
                         MeaningfulPrayers = 0,
                         PositivityPoints = 0,
                         Prayers = 0
+                    },
+                    UserRanks = new UserRanks
+                    {
+                        AmigoRankId = 1,
+                        PositivtyRankId = 1
                     }
                 };
                 await _context.Users.AddAsync(newUser);
