@@ -158,7 +158,6 @@ namespace GaryPortalAPI.Services
             user.UserName = details.UserName;
             user.UserSpanishName = details.SpanishName;
             user.UserProfileImageUrl = details.ProfilePictureUrl;
-            user.UserTeam.TeamId = details.TeamId;
             user.UserPoints.AmigoPoints = details.AmigoPoints;
             user.UserPoints.PositivityPoints = details.PositivePoints;
 
@@ -166,19 +165,25 @@ namespace GaryPortalAPI.Services
             {
                 _context.UserRanks.Remove(user.UserRanks);
             }
-
+            if (user.UserTeam != null)
+            {
+                _context.UserTeams.Remove(user.UserTeam);
+            }
 
             user.UserRanks = new UserRanks
             {
                 AmigoRankId = details.AmigoRankId,
                 PositivtyRankId = details.PositiveRankId
             };
+            user.UserTeam = new UserTeam
+            {
+                TeamId = details.TeamId
+            };
 
             _context.Update(user);
             await _context.SaveChangesAsync(ct);
             return await GetByIdAsync(uuid, ct);
         }
-
 
         public async Task<string> UpdateUserProfilePictureAsync(string uuid, IFormFile file, CancellationToken ct = default)
         {
