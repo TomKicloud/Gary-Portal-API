@@ -125,8 +125,9 @@ namespace GaryPortalAPI.Services
         public async Task ToggleLikeForPostAsync(int feedPostId, string userUUID, CancellationToken ct = default)
         {
             FeedPost post = await _context.FeedPosts
+                    .AsNoTracking()
                     .Include(fp => fp.Likes)
-                    .FirstOrDefaultAsync(ct);
+                    .FirstOrDefaultAsync(fp => fp.PostId == feedPostId, ct);
 
             if (post == null)
                 return;

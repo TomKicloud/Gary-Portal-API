@@ -1,5 +1,6 @@
 ﻿using System;
 using GaryPortalAPI.Models;
+using GaryPortalAPI.Models.Chat;
 using GaryPortalAPI.Models.Feed;
 using Microsoft.EntityFrameworkCore;
 
@@ -35,6 +36,11 @@ public class AppDbContext : DbContext
     public DbSet<AditLog> FeedAditLogs { get; set; }
 
     public DbSet<StaffRoomAnnouncement> StaffRoomAnnouncements { get; set; }
+
+    public DbSet<Chat> Chats { get; set; }
+    public DbSet<ChatMessage> ChatMessages { get; set; }
+    public DbSet<ChatMember> ChatMembers { get; set; }
+    public DbSet<ChatMessageType> ChatMessageTypes { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -333,6 +339,63 @@ public class AppDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(sra => sra.UserUUID);
             entity.Ignore(sra => sra.UserDTO);
+        });
+
+        #endregion
+
+        #region Chat
+
+        modelBuilder.Entity<Chat>(entity =>
+        {
+            entity.HasKey(c => c.ChatUUID);
+            entity
+                .HasMany(c => c.ChatMembers)
+                .WithOne(cm => cm.Chat)
+                .HasForeignKey(cm => cm.ChatUUID)
+                .IsRequired()
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<ChatMember>(entity =>
+        {
+            entity.HasKey(cm => new { cm.ChatUUID, cm.UserUUID });
+            entity
+                .HasOne(cm => cm.User)
+                .WithMany()
+                .HasForeignKey(cm => cm.UserUUID)
+                .IsRequired()
+                .OnDelete(DeleteBehavior.Cascade);
+            entity
+                .HasOne(cm => cm.Chat)
+                .WithMany(c => c.ChatMembers)
+                .HasForeignKey(cm => cm.ChatUUID)
+                .IsRequired()
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.Ignore(cm => cm.UserDTO);
+        });
+
+        modelBuilder.Entity<ChatMessage>(entity =>
+        {
+            entity.HasKey(cm => cm.ChatMessageUUID);
+            entity
+                .HasOne(cm => cm.Chat)
+                .WithMany(c => c.ChatMessages)
+                .HasForeignKey(cm => cm.ChatUUID)
+                .IsRequired()
+                .OnDelete(DeleteBehavior.Cascade);
+            entity
+                .HasOne(cm => cm.User)
+                .WithMany()
+                .HasForeignKey(cm => cm.UserUUID)
+                .IsRequired()
+                .OnDelete(DeleteBehavior.Cascade);
+            entity
+                .HasOne(cm => cm.ChatMessageType)
+                .WithMany()
+                .HasForeignKey(cm => cm.MessageTypeId)
+                .IsRequired()
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.Ignore(cm => cm.UserDTO);
         });
 
         #endregion
