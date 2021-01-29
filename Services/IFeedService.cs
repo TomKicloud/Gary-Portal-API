@@ -112,14 +112,8 @@ namespace GaryPortalAPI.Services
 
         public async Task<bool> HasUserLikedPostAsync(string userUUID, int feedPostId, CancellationToken ct = default)
         {
-            FeedPost post = await _context.FeedPosts
-                    .AsNoTracking()
-                    .Include(fp => fp.Likes)
-                    .FirstOrDefaultAsync(ct);
-            if (post == null)
-                return false;
-
-            return post.Likes.FirstOrDefault(fl => fl.UserUUID == userUUID && fl.IsLiked) != null;
+            FeedLike like = await _context.FeedPostLikes.AsNoTracking().FirstOrDefaultAsync(fpl => fpl.UserUUID == userUUID && fpl.PostId == feedPostId && fpl.IsLiked);
+            return like != null;
         }
 
         public async Task ToggleLikeForPostAsync(int feedPostId, string userUUID, CancellationToken ct = default)
@@ -131,6 +125,7 @@ namespace GaryPortalAPI.Services
 
             if (post == null)
                 return;
+
 
             FeedLike like = post.Likes.FirstOrDefault(fl => fl.UserUUID == userUUID);
             if (await HasUserLikedPostAsync(userUUID, feedPostId))
