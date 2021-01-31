@@ -14,6 +14,16 @@ namespace GaryPortalAPI.Models.Chat
 
         public virtual ICollection<ChatMember> ChatMembers { get; set; }
         public virtual ICollection<ChatMessage> ChatMessages { get; set; }
+        public virtual ChatMessage LastChatMessage { get; set; }
+    }
+
+    public class ChatEditDetails
+    {
+        public string ChatUUID { get; set; }
+        public string ChatName { get; set; }
+        public bool ChatIsPublic { get; set; }
+        public bool ChatIsProtected { get; set; }
+        public bool ChatIsDeleted { get; set; }
     }
 
     public class ChatMember
@@ -21,6 +31,7 @@ namespace GaryPortalAPI.Models.Chat
         public string ChatUUID { get; set; }
         public string UserUUID { get; set; }
         public bool IsInChat { get; set; }
+        public DateTime? LastReadAt { get; set; }
 
         public virtual Chat Chat { get; set; }
         public virtual User User { get; set; }

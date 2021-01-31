@@ -68,6 +68,7 @@ namespace GaryPortalAPI
             services.AddScoped<IAuthenticationService, AuthenticationService>();
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IFeedService, FeedService>();
+            services.AddScoped<IChatService, ChatService>();
             services.AddScoped<IStaffService, StaffService>();
             services.AddTransient<IHashingService, HashingService>();
             services.AddTransient<ITokenService, TokenService>();

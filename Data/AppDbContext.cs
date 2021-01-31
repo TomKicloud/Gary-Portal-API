@@ -354,6 +354,7 @@ public class AppDbContext : DbContext
                 .HasForeignKey(cm => cm.ChatUUID)
                 .IsRequired()
                 .OnDelete(DeleteBehavior.Cascade);
+            entity.Ignore(c => c.LastChatMessage);
         });
 
         modelBuilder.Entity<ChatMember>(entity =>
