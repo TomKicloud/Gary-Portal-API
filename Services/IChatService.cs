@@ -88,13 +88,20 @@ namespace GaryPortalAPI.Services
             ICollection<Chat> chats = await _context.Chats
                 .AsNoTracking()
                 .Include(c => c.ChatMembers.Where(cm => cm.IsInChat))
+                    .ThenInclude(cm => cm.User)
                 .Where(c => c.ChatMembers.Any(cm => cm.UserUUID == userUUID && cm.IsInChat))
                 .ToListAsync(ct);
 
             foreach (Chat chat in chats)
             {
                 chat.LastChatMessage = await GetLastMessageForChat(chat.ChatUUID, ct);
+                foreach (ChatMember member in chat.ChatMembers)
+                {
+                    member.UserDTO = member.User.ConvertToDTO();
+                    member.User = null;
+                }
             }
+
             return chats.OrderByDescending(c => c.LastChatMessage != null ? c.LastChatMessage.MessageCreatedAt : c.ChatCreatedAt).ToList();
         }
 
