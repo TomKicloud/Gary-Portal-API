@@ -18,6 +18,7 @@ namespace GaryPortalAPI.Services
         Task<Chat> GetChatByIdAsync(string uuid, CancellationToken ct = default);
         Task<Chat> EditChatAsync(ChatEditDetails newChat, CancellationToken ct = default);
         Task<ICollection<Chat>> GetAllChatsForUserAsync(string userUUID, CancellationToken ct = default);
+        Task<ChatMember> GetChatMemberAsync(string chatUUID, string userUUID, CancellationToken ct = default);
         Task<ICollection<ChatMember>> GetMembersForChatAsync(string chatUUID, CancellationToken ct = default);
 
         Task<ChatMessage> GetLastMessageForChat(string chatUUID, CancellationToken ct = default);
@@ -25,7 +26,7 @@ namespace GaryPortalAPI.Services
         Task<ChatMessage> GetMessageByIdAsync(string messageUUID, CancellationToken ct = default);
         Task MarkChatAsReadAsync(string userUUID, string chatUUID, CancellationToken ct = default);
 
-        Task<Chat> AddUserToChatAsync(string userUUID, string chatUUID, CancellationToken ct = default);
+        Task<ChatMember> AddUserToChatAsync(string userUUID, string chatUUID, CancellationToken ct = default);
         Task RemoveFromChatAsync(string userUUID, string chatUUID, CancellationToken ct = default);
 
         Task<ChatMessage> AddMessageToChatAsync(ChatMessage msg, string chatUUID, CancellationToken ct = default);
@@ -118,6 +119,17 @@ namespace GaryPortalAPI.Services
                 .ToListAsync();
         }
 
+        public async Task<ChatMember> GetChatMemberAsync(string chatUUID, string userUUID, CancellationToken ct = default)
+        {
+            ChatMember member = await _context.ChatMembers
+                .AsNoTracking()
+                .Include(cm => cm.User)
+                .FirstOrDefaultAsync(cm => cm.ChatUUID == chatUUID && cm.UserUUID == userUUID, ct);
+            member.UserDTO = member.User.ConvertToDTO();
+            member.User = null;
+            return member;
+        }
+
 
 
         public async Task<ChatMessage> GetLastMessageForChat(string chatUUID, CancellationToken ct = default)
@@ -173,15 +185,16 @@ namespace GaryPortalAPI.Services
 
 
 
-        public async Task<Chat> AddUserToChatAsync(string userUUID, string chatUUID, CancellationToken ct = default)
+        public async Task<ChatMember> AddUserToChatAsync(string userUUID, string chatUUID, CancellationToken ct = default)
         {
+            Console.WriteLine(userUUID);
             ChatMember member = new ChatMember
             {
                 ChatUUID = chatUUID,
                 UserUUID = userUUID,
                 IsInChat = true
             };
-            ChatMember existingMember = await _context.ChatMembers.AsNoTracking().FirstOrDefaultAsync(cm => cm.UserUUID == userUUID && cm.ChatUUID == chatUUID);
+            ChatMember existingMember = await _context.ChatMembers.AsNoTracking().FirstOrDefaultAsync(cm => cm.UserUUID == userUUID && cm.ChatUUID == chatUUID, ct);
             if (existingMember != null)
             {
                 member.IsInChat = true;
@@ -191,7 +204,7 @@ namespace GaryPortalAPI.Services
                 await _context.ChatMembers.AddAsync(member, ct);
             }
             await _context.SaveChangesAsync(ct);
-            return await GetChatByIdAsync(chatUUID, ct);
+            return await GetChatMemberAsync(chatUUID, userUUID);
         }
 
         public async Task RemoveFromChatAsync(string userUUID, string chatUUID, CancellationToken ct = default)

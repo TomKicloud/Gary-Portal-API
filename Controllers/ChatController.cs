@@ -21,10 +21,12 @@ namespace GaryPortalAPI.Controllers
     public class ChatController : Controller
     {
         private readonly IChatService _chatService;
+        private readonly IUserService _userService;
 
-        public ChatController(IChatService chatService)
+        public ChatController(IChatService chatService, IUserService userService)
         {
             _chatService = chatService;
+            _userService = userService;
         }
 
         [HttpGet("Chats/{userUUID}")]
@@ -56,10 +58,26 @@ namespace GaryPortalAPI.Controllers
         }
 
         [HttpPut("Chats/AddUser/{userUUID}/{chatUUID}")]
-        [Produces(typeof(Chat))]
+        [Produces(typeof(ChatMember))]
         public async Task<IActionResult> AddUserToChat(string userUUID, string chatUUID, CancellationToken ct = default)
         {
             return Ok(await _chatService.AddUserToChatAsync(userUUID, chatUUID, ct));
+        }
+
+        [HttpPut("Chats/AddUserByUsername/{username}/{chatUUID}")]
+        [Produces(typeof(ChatMember))]
+        public async Task<IActionResult> AddUserToChatByUsername(string username, string chatUUID, CancellationToken ct = default)
+        {
+            Chat chat = await _chatService.GetChatByIdAsync(chatUUID, ct);
+            if (chat.ChatMembers.Where(cm => cm.UserUUID == AuthenticationUtilities.GetUUIDFromIdentity(User)).Any()) {
+                string uuid = await _userService.GetUUIDFromUsername(username, ct);
+                if (string.IsNullOrWhiteSpace(uuid))
+                    return BadRequest("User does not exist");
+                return Ok(await _chatService.AddUserToChatAsync(uuid, chatUUID, ct));
+            } else
+            {
+                return BadRequest("You cannot add to a chat you are not in");
+            }
         }
 
         [HttpPut("Chats/RemoveUser/{userUUID}/{chatUUID}")]
