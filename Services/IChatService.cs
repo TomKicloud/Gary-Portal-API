@@ -31,6 +31,9 @@ namespace GaryPortalAPI.Services
         Task<ChatMessage> AddMessageToChatAsync(ChatMessage msg, string chatUUID, CancellationToken ct = default);
         Task<bool> RemoveMessageAsync(string messageUUID, CancellationToken ct = default);
         Task<string> UploadChatAttachmentAsync(IFormFile file, string chatUUID, CancellationToken ct = default);
+
+        Task ReportMessageAsync(ChatMessageReport report, CancellationToken ct = default);
+        Task MarkReportAsDeletedAsync(int reportId, CancellationToken ct = default);
     }
 
     public class ChatService : IChatService
@@ -236,7 +239,22 @@ namespace GaryPortalAPI.Services
             return $"https://cdn.tomk.online/GaryPortal/Chat/{chatUUID}/Attachments/{newFileName}";
         }
 
+        public async Task ReportMessageAsync(ChatMessageReport report, CancellationToken ct = default)
+        {
+            await _context.ChatMessageReports.AddAsync(report);
+            await _context.SaveChangesAsync(ct);
+        }
 
+        public async Task MarkReportAsDeletedAsync(int reportId, CancellationToken ct = default)
+        {
+            ChatMessageReport report = await _context.ChatMessageReports.FindAsync(reportId);
+            if (report != null)
+            {
+                report.IsDeleted = true;
+                _context.Update(report);
+                await _context.SaveChangesAsync();
+            }
+        }
 
 
 

@@ -1,4 +1,5 @@
 ﻿using System;
+using GaryPortalAPI.Models.Chat;
 using GaryPortalAPI.Models.Feed;
 
 namespace GaryPortalAPI.Models
@@ -26,6 +27,19 @@ namespace GaryPortalAPI.Models
         public bool IsDeleted { get; set; }
 
         public virtual FeedPost ReportedPost { get; set; }
+        public virtual User Reporter { get; set; }
+    }
+
+    public class ChatMessageReport
+    {
+        public int ChatMessageReportId { get; set; }
+        public string ChatMessageUUID { get; set; }
+        public string ReportReason { get; set; }
+        public DateTime ReportIssuedAt { get; set; }
+        public string ReportByUUID { get; set; }
+        public bool IsDeleted { get; set; }
+
+        public virtual ChatMessage ReportedMessage { get; set; }
         public virtual User Reporter { get; set; }
     }
 }

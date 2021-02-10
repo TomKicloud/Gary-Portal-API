@@ -18,11 +18,13 @@ namespace GaryPortalAPI.Controllers
 
         private readonly IUserService _userService;
         private readonly IStaffService _staffService;
+        private readonly IChatService _chatService;
 
-        public AdminController(IUserService userService, IStaffService staffService)
+        public AdminController(IUserService userService, IStaffService staffService, IChatService chatService)
         {
             _userService = userService;
             _staffService = staffService;
+            _chatService = chatService;
         }
     
 
@@ -60,6 +62,13 @@ namespace GaryPortalAPI.Controllers
         public async Task<IActionResult> GetQueuedUsers(CancellationToken ct = default)
         {
             return Ok(await _userService.GetAllQueuedAsync(ct));
+        }
+
+        [HttpPut("MarkChatReportAsDeleted/{reportId}")]
+        public async Task<IActionResult> MarkUserReportAsDeleted(int reportId, CancellationToken ct = default)
+        {
+            await _chatService.MarkReportAsDeletedAsync(reportId, ct);
+            return Ok();
         }
     }
 }

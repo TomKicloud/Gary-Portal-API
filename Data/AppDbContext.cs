@@ -25,6 +25,7 @@ public class AppDbContext : DbContext
 
     public DbSet<UserReport> UserReports { get; set; }
     public DbSet<FeedReport> FeedReports { get; set; }
+    public DbSet<ChatMessageReport> ChatMessageReports { get; set; }
 
     public DbSet<FeedPost> FeedPosts { get; set; }
     public DbSet<FeedMediaPost> FeedMediaPosts { get; set; }
@@ -321,6 +322,21 @@ public class AppDbContext : DbContext
                 .HasOne(fr => fr.Reporter)
                 .WithMany()
                 .HasForeignKey(fr => fr.ReportByUUID)
+                .IsRequired();
+        });
+
+        modelBuilder.Entity<ChatMessageReport>(entity =>
+        {
+            entity
+                .HasOne(cmr => cmr.ReportedMessage)
+                .WithMany()
+                .HasForeignKey(cmr => cmr.ChatMessageUUID)
+                .IsRequired();
+
+            entity
+                .HasOne(cmr => cmr.Reporter)
+                .WithMany()
+                .HasForeignKey(cmr => cmr.ReportByUUID)
                 .IsRequired();
         });
 

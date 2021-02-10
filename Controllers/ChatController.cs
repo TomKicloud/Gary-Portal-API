@@ -123,5 +123,12 @@ namespace GaryPortalAPI.Controllers
             return Ok();
         }
 
+        [HttpPost("ReportMessage/{messageUUID}")]
+        public async Task<IActionResult> ReportUser([FromBody] ChatMessageReport report, CancellationToken ct = default)
+        {
+            await _chatService.ReportMessageAsync(report, ct);
+            return Ok();
+        }
+
     }
 }
