@@ -9,11 +9,14 @@ using GaryPortalAPI.Models.Chat;
 using GaryPortalAPI.Services;
 using GaryPortalAPI.Services.Authentication;
 using GaryPortalAPI.Utilities;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using User = GaryPortalAPI.Models.User;
 
 namespace GaryPortalAPI.Controllers
 {
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [Route("api/[controller]")]
     public class ChatController : Controller
     {
