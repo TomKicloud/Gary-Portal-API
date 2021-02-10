@@ -123,7 +123,8 @@ namespace GaryPortalAPI.Services
                 .AsNoTracking()
                 .Where(cm => cm.ChatUUID == chatUUID && !cm.MessageIsDeleted)
                 .OrderByDescending(cm => cm.MessageCreatedAt)
-                .Select(cm => new ChatMessage{ MessageContent = cm.MessageContent, MessageCreatedAt = cm.MessageCreatedAt })
+                .Include(cm => cm.User)
+                .Select(cm => new ChatMessage{ MessageContent = cm.MessageContent, MessageCreatedAt = cm.MessageCreatedAt, UserDTO = cm.User.ConvertToDTO() })
                 .FirstOrDefaultAsync(ct);
         }
 

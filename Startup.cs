@@ -1,6 +1,7 @@
     using System;
 using System.Text;
 using GaryPortalAPI.Data;
+using GaryPortalAPI.Hubs;
 using GaryPortalAPI.Services;
 using GaryPortalAPI.Services.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -33,6 +34,8 @@ namespace GaryPortalAPI
                     option.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
                     option.SerializerSettings.DateFormatString = "yyyy-MM-dd HH:mm:ss";
                 });
+
+            services.AddSignalR();
 
             services.AddDbContext<AppDbContext>(o =>
             {
@@ -91,6 +94,7 @@ namespace GaryPortalAPI
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
+                endpoints.MapHub<ChatHub>("/chathub");
             });
         }
     }
