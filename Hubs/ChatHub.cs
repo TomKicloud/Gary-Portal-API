@@ -26,5 +26,10 @@ namespace GaryPortalAPI.Hubs
         {
             await Groups.RemoveFromGroupAsync(Context.ConnectionId, groupId);
         }
+
+        public async Task KeepAlive()
+        {
+            await Clients.Client(Context.ConnectionId).SendAsync("KeepAlive");
+        }
     }
 }
