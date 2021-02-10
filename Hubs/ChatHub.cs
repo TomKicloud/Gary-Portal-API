@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using GaryPortalAPI.Models.Chat;
 using Microsoft.AspNetCore.SignalR;
 
 namespace GaryPortalAPI.Hubs
@@ -25,6 +26,11 @@ namespace GaryPortalAPI.Hubs
         public async Task SubscribeToGroup(string groupId)
         {
             await Groups.AddToGroupAsync(Context.ConnectionId, groupId);
+        }
+
+        public async Task AddedUserToChat(string chatUUID, ChatMember member)
+        {
+            await Clients.Group(chatUUID).SendAsync("NewChatUser", chatUUID, member);
         }
 
         public async Task RemoveFromGroup(string groupId)
