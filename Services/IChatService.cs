@@ -124,7 +124,7 @@ namespace GaryPortalAPI.Services
                 .Where(cm => cm.ChatUUID == chatUUID && !cm.MessageIsDeleted)
                 .OrderByDescending(cm => cm.MessageCreatedAt)
                 .Include(cm => cm.User)
-                .Select(cm => new ChatMessage{ MessageContent = cm.MessageContent, MessageCreatedAt = cm.MessageCreatedAt, UserDTO = cm.User.ConvertToDTO() })
+                .Select(cm => new ChatMessage{ MessageContent = cm.MessageContent, MessageCreatedAt = cm.MessageCreatedAt, MessageTypeId = cm.MessageTypeId, UserDTO = cm.User.ConvertToDTO() })
                 .FirstOrDefaultAsync(ct);
         }
 
