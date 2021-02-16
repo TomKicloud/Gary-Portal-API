@@ -105,7 +105,7 @@ namespace GaryPortalAPI.Controllers
             return Ok(await _feedService.UploadNewPostAsync(post, ct));
         }
 
-        [HttpPut("DeletePost")]
+        [HttpPut("DeletePost/{feedPostId}")]
         public async Task<IActionResult> DeletePost(int feedPostId, CancellationToken ct = default)
         {
             FeedPost post = await _feedService.GetByIdAsync(feedPostId);
