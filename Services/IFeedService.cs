@@ -247,11 +247,12 @@ namespace GaryPortalAPI.Services
 
         public async Task<ICollection<AditLog>> GetAllAditLogsAsync(int teamId = 0, CancellationToken ct = default)
         {
+            DateTime yesterday = DateTime.UtcNow.AddDays(-1);
             ICollection<AditLog> aditLogs = await _context.FeedAditLogs
                 .AsNoTracking()
                 .Include(al => al.AditLogTeam)
                 .Include(al => al.Poster)
-                .Where(al => teamId == 0 || al.AditLogTeamId == teamId)
+                .Where(al => (teamId == 0 || al.AditLogTeamId == teamId) && al.DatePosted >= yesterday)
                 .ToListAsync(ct);
             foreach (AditLog aditlog in aditLogs)
             {
