@@ -125,7 +125,18 @@ namespace GaryPortalAPI.Controllers
             return Ok();
         }
 
+        [HttpPut("ResetVotes/{postId}")]
+        public async Task<IActionResult> ResetPollVotes(int postId, CancellationToken ct = default)
+        {
+            FeedPost post = await _feedService.GetByIdAsync(postId);
+            if (!AuthenticationUtilities.IsSameUser(User, post.PosterUUID))
+                return Unauthorized("You do not have access to edit this post");
+            if (post == null || post.PostType != "poll")
+                return BadRequest("Poll does not exist at this id");
 
+            await _feedService.ResetPollVotesAsync(postId, ct);
+            return Ok();
+        }
 
         [HttpGet("AditLogs")]
         public async Task<IActionResult> GetAditLogsAsync(int teamId = 0, CancellationToken ct = default)

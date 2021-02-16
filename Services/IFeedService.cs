@@ -25,6 +25,7 @@ namespace GaryPortalAPI.Services
         Task<FeedPost> UploadNewPostAsync(FeedPost post, CancellationToken ct = default);
         Task MarkPostAsDeletedAsync(int feedPostId, CancellationToken ct = default);
         Task VoteForPollAsync(string userUUID, int feedPollAnswerId, bool voteFor = true, CancellationToken ct = default);
+        Task ResetPollVotesAsync(int postId, CancellationToken ct = default);
 
         Task<ICollection<FeedComment>> GetCommentsForPostAsync(int postId, CancellationToken ct = default);
         Task<FeedComment> GetCommentByIdAsync(int commentId, CancellationToken ct = default);
@@ -99,7 +100,6 @@ namespace GaryPortalAPI.Services
                 .Include(fp => ((FeedPollPost)fp).PollAnswers)
                     .ThenInclude(fpa => fpa.Votes.Where(fpv => !fpv.IsDeleted))
                 .FirstOrDefaultAsync(fp => fp.PostId == feedPostId, ct);
-            Console.WriteLine(post.PostType);
             post.PosterDTO = post.Poster.ConvertToDTO();
             post.Poster = null;
             foreach (FeedComment comment in post.Comments)
@@ -228,6 +228,21 @@ namespace GaryPortalAPI.Services
                 _context.Add(vote);
             }
             await _context.SaveChangesAsync(ct);          
+        }
+
+        public async Task ResetPollVotesAsync(int postId, CancellationToken ct = default)
+        {
+            if (await GetByIdAsync(postId, ct) is not FeedPollPost post)
+                return;
+            foreach (FeedPollAnswer answer in post.PollAnswers)
+            {
+                foreach (FeedAnswerVote vote in answer.Votes.Where(v => !v.IsDeleted))
+                {
+                    vote.IsDeleted = true;
+                }
+            }
+            _context.Update(post);
+            await _context.SaveChangesAsync(ct);
         }
 
         public async Task<ICollection<AditLog>> GetAllAditLogsAsync(int teamId = 0, CancellationToken ct = default)
