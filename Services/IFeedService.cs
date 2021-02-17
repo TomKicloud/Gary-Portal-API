@@ -290,7 +290,7 @@ namespace GaryPortalAPI.Services
             Directory.CreateDirectory("/var/www/cdn/GaryPortal/Feed/Attachments/AditLogs/");
             Directory.CreateDirectory("/var/www/cdn/GaryPortal/Feed/Attachments/AditLogs/Thumbs");
             string newFileName = aditLog.FileName.Replace(Path.GetFileNameWithoutExtension(aditLog.FileName), uuid);
-            var filePath = $"/var/www/cdn/GaryPortal/Feed/Attachments/Media/{newFileName}";
+            var filePath = $"/var/www/cdn/GaryPortal/Feed/Attachments/AditLogs/{newFileName}";
             string thumbnailFilePath = "";
             if (thumbnail != null)
             {
