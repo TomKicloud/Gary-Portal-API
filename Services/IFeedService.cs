@@ -172,6 +172,14 @@ namespace GaryPortalAPI.Services
 
         public async Task<FeedPost> UploadNewPostAsync(FeedPost post, CancellationToken ct = default)
         {
+            if (post is FeedMediaPost)
+            {
+                post = post as FeedMediaPost;
+            } else
+            {
+                post = post as FeedPollPost;
+            }
+
             await _context.FeedPosts.AddAsync(post, ct);
             await _context.SaveChangesAsync(ct);
             return await GetByIdAsync(post.PostId, ct);
