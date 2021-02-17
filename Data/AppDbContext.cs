@@ -166,6 +166,7 @@ public class AppDbContext : DbContext
                 .HasForeignKey(ub => ub.BlockedUserUUID)
                 .OnDelete(DeleteBehavior.Cascade)
                 .IsRequired();
+            entity.Ignore(ub => ub.BlockedUserDTO);
         });
 
         #endregion User

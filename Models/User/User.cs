@@ -150,5 +150,6 @@ namespace GaryPortalAPI.Models
 
         public virtual User BlockerUser { get; set; }
         public virtual User BlockedUser { get; set; }
+        public virtual UserDTO BlockedUserDTO { get; set; }
     }
 }

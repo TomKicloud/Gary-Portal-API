@@ -353,11 +353,18 @@ namespace GaryPortalAPI.Services
 
         public async Task<ICollection<UserBlock>> GetAllBlocksAsync(string uuid, CancellationToken ct = default)
         {
-            return await _context.UserBlocks
+            ICollection<UserBlock> blocks = await _context.UserBlocks
                 .Where(ub => ub.BlockerUserUUID == uuid && ub.IsBlocked)
                 .Include(ub => ub.BlockedUser)
                 .AsNoTracking()
                 .ToListAsync(ct);
+
+            foreach (UserBlock block in blocks)
+            {
+                block.BlockedUserDTO = block.BlockedUser.ConvertToDTO();
+                block.BlockedUser = null;
+            }
+            return blocks;
         }
 
         public async Task ReportUserAsync(UserReport report, CancellationToken ct = default)
