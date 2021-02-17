@@ -151,14 +151,11 @@ namespace GaryPortalAPI.Controllers
         }
 
         [HttpPost("UploadAditLogAttachment")]
-        public async Task<IActionResult> UploadAditLogAttachment(CancellationToken ct = default)
+        public async Task<IActionResult> UploadAditLogAttachment(bool isVideo = false, CancellationToken ct = default)
         {
-            if (HttpContext.Request.Form.Files.Count >= 2)
+            if (HttpContext.Request.Form.Files.Count >= 1)
             {
-                return Ok(await _feedService.UploadAditLogMediaAsync(HttpContext.Request.Form.Files.FirstOrDefault(), HttpContext.Request.Form.Files[1], ct));
-            } else if (HttpContext.Request.Form.Files.Count == 1)
-            {
-                return Ok(await _feedService.UploadAditLogMediaAsync(HttpContext.Request.Form.Files.FirstOrDefault(), ct: ct));
+                return Ok(await _feedService.UploadAditLogMediaAsync(HttpContext.Request.Form.Files.FirstOrDefault(), isVideo, ct: ct));
             }
 
             return BadRequest("No files uploaded");
