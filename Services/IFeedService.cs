@@ -6,7 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using FFMpegCore;
+using Xabe.FFmpeg;
 using GaryPortalAPI.Data;
 using GaryPortalAPI.Models;
 using GaryPortalAPI.Models.Feed;
@@ -293,23 +293,22 @@ namespace GaryPortalAPI.Services
             string newFileName = aditLog.FileName.Replace(Path.GetFileNameWithoutExtension(aditLog.FileName), uuid);
             var filePath = $"/var/www/cdn/GaryPortal/Feed/Attachments/AditLogs/{newFileName}";
 
-            if (isVideo)
-            {
-                using Stream s = aditLog.OpenReadStream();
-                var mediaInfo = await FFProbe.AnalyseAsync(s);
-                Bitmap bitmap = FFMpeg.Snapshot(mediaInfo, new Size(400, 400), TimeSpan.FromSeconds(1));
-                string thumbnailFileName = $"{uuid}.jpg";
-                string thumbnailFilePath = $"/var/www/cdn/GaryPortal/Feed/Attachments/AditLogs/Thumbs/{thumbnailFileName}";
-                bitmap.Save($"/var/www/cdn/GaryPortal/Feed/Attachments/AditLogs/Thumbs/{thumbnailFileName}", ImageFormat.Jpeg);
-            }
-
             using (var stream = new FileStream(filePath, FileMode.Create))
                 await aditLog.CopyToAsync(stream, ct);
+
+            string thumbnailFileName = "";
+            if (isVideo)
+            {
+                thumbnailFileName = $"{uuid}.jpg";
+                string thumbnailFilePath = $"/var/www/cdn/GaryPortal/Feed/Attachments/AditLogs/Thumbs/{thumbnailFileName}";
+                IConversion conversion = await FFmpeg.Conversions.FromSnippet.Snapshot(filePath, thumbnailFilePath, TimeSpan.FromSeconds(0.2));
+                await conversion.Start(ct);
+            }
 
             return new AditLogUrlResult
             {
                 AditLogUrl = $"https://cdn.tomk.online/GaryPortal/Feed/Attachments/AditLogs/{newFileName}",
-                AditLogThumbnailUrl = isVideo ? "https://cdn.tomk.online/GaryPortal/Feed/Attachments/AditLogs/Thumbs/{thumbnailFileName}" : ""
+                AditLogThumbnailUrl = isVideo ? $"https://cdn.tomk.online/GaryPortal/Feed/Attachments/AditLogs/Thumbs/{thumbnailFileName}" : ""
             };
 
         }
