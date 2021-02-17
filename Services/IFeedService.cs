@@ -6,7 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using FFMpegCore;
+using Xabe.FFmpeg;
 using GaryPortalAPI.Data;
 using GaryPortalAPI.Models;
 using GaryPortalAPI.Models.Feed;
@@ -35,7 +35,7 @@ namespace GaryPortalAPI.Services
         Task<ICollection<AditLog>> GetAllAditLogsAsync(int teamId = 0, CancellationToken ct = default);
         Task<AditLog> GetAditLogAsync(int aditLogId, CancellationToken ct = default);
         Task MarkAditLogAsDeletedAsync(int aditLogId, CancellationToken ct = default);
-        Task<AditLogUrlResult> UploadAditLogMediaAsync(IFormFile aditLog, IFormFile thumbnail = null, CancellationToken ct = default);
+        Task<AditLogUrlResult> UploadAditLogMediaAsync(IFormFile aditLog, bool isVideo = false, CancellationToken ct = default);
         Task<AditLog> UploadNewAditLogAsync(AditLog aditLog, CancellationToken ct = default);
         Task WatchAditLogAsync(int aditLogId, string userUUID, CancellationToken ct = default);
 
@@ -282,36 +282,33 @@ namespace GaryPortalAPI.Services
             await _context.SaveChangesAsync(ct);
         }
 
-        public async Task<AditLogUrlResult> UploadAditLogMediaAsync(IFormFile aditLog, IFormFile thumbnail = null, CancellationToken ct = default)
+        public async Task<AditLogUrlResult> UploadAditLogMediaAsync(IFormFile aditLog, bool isVideo = false, CancellationToken ct = default)
         {
             if (aditLog == null) return null;
 
             string uuid = Guid.NewGuid().ToString();
             Directory.CreateDirectory("/var/www/cdn/GaryPortal/Feed/Attachments/AditLogs/");
             Directory.CreateDirectory("/var/www/cdn/GaryPortal/Feed/Attachments/AditLogs/Thumbs");
+
             string newFileName = aditLog.FileName.Replace(Path.GetFileNameWithoutExtension(aditLog.FileName), uuid);
             var filePath = $"/var/www/cdn/GaryPortal/Feed/Attachments/AditLogs/{newFileName}";
-            string thumbnailFilePath = "";
-            if (thumbnail != null)
-            {
-                string thumbnailFileName = thumbnail.FileName.Replace(Path.GetFileNameWithoutExtension(thumbnail.FileName), uuid);
-                thumbnailFilePath = $"/var/www/cdn/GaryPortal/Feed/Attachments/AditLogs/Thumbs/{thumbnailFileName}";
-            }
-            
 
             using (var stream = new FileStream(filePath, FileMode.Create))
                 await aditLog.CopyToAsync(stream, ct);
 
-            if (thumbnail != null && !string.IsNullOrEmpty(thumbnailFilePath))
+            string thumbnailFileName = "";
+            if (isVideo)
             {
-                using (var stream = new FileStream(thumbnailFilePath, FileMode.Create))
-                    await thumbnail.CopyToAsync(stream, ct);
+                thumbnailFileName = $"{uuid}.jpg";
+                string thumbnailFilePath = $"/var/www/cdn/GaryPortal/Feed/Attachments/AditLogs/Thumbs/{thumbnailFileName}";
+                IConversion conversion = await FFmpeg.Conversions.FromSnippet.Snapshot(filePath, thumbnailFilePath, TimeSpan.FromSeconds(0.2));
+                await conversion.Start(ct);
             }
 
             return new AditLogUrlResult
             {
                 AditLogUrl = $"https://cdn.tomk.online/GaryPortal/Feed/Attachments/AditLogs/{newFileName}",
-                AditLogThumbnailUrl = thumbnail != null ? "https://cdn.tomk.online/GaryPortal/Feed/Attachments/AditLogs/Thumbs/{thumbnailFileName}" : ""
+                AditLogThumbnailUrl = isVideo ? $"https://cdn.tomk.online/GaryPortal/Feed/Attachments/AditLogs/Thumbs/{thumbnailFileName}" : ""
             };
 
         }
