@@ -253,6 +253,7 @@ namespace GaryPortalAPI.Services
                 .Include(al => al.AditLogTeam)
                 .Include(al => al.Poster)
                 .Where(al => (teamId == 0 || al.AditLogTeamId == teamId) && al.DatePosted >= yesterday)
+                .OrderBy(al => al.DatePosted)
                 .ToListAsync(ct);
             foreach (AditLog aditlog in aditLogs)
             {
