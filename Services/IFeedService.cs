@@ -199,7 +199,7 @@ namespace GaryPortalAPI.Services
             ICollection<FeedComment> comments = await _context.FeedPostComments
                 .AsNoTracking()
                 .Include(u => u.User)
-                .Where(fc => fc.PostId == postId)
+                .Where(fc => fc.PostId == postId && !fc.IsDeleted)
                 .ToListAsync(ct);
             foreach (FeedComment comment in comments)
             {
