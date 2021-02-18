@@ -196,7 +196,17 @@ namespace GaryPortalAPI.Services
 
         public async Task<ICollection<FeedComment>> GetCommentsForPostAsync(int postId, CancellationToken ct = default)
         {
-            return await _context.FeedPostComments.Where(fc => fc.PostId == postId).ToListAsync(ct);
+            ICollection<FeedComment> comments = await _context.FeedPostComments
+                .AsNoTracking()
+                .Include(u => u.User)
+                .Where(fc => fc.PostId == postId)
+                .ToListAsync(ct);
+            foreach (FeedComment comment in comments)
+            {
+                comment.UserDTO = comment.User.ConvertToDTO();
+                comment.User = null;
+            }
+            return comments;
         }
 
         public async Task<FeedComment> GetCommentByIdAsync(int commentId, CancellationToken ct = default)
