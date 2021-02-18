@@ -211,14 +211,20 @@ namespace GaryPortalAPI.Services
 
         public async Task<FeedComment> GetCommentByIdAsync(int commentId, CancellationToken ct = default)
         {
-            return await _context.FeedPostComments.FindAsync(commentId);
+            FeedComment comment = await _context.FeedPostComments
+                .AsNoTracking()
+                .Include(fc => fc.User)
+                .FirstOrDefaultAsync(fc => fc.FeedCommentId == commentId, cancellationToken: ct);
+            comment.UserDTO = comment.User.ConvertToDTO();
+            comment.User = null;
+            return comment;
         }
 
         public async Task<FeedComment> AddCommentToPostAsync(FeedComment comment, CancellationToken ct = default)
         {
             await _context.FeedPostComments.AddAsync(comment, ct);
             await _context.SaveChangesAsync(ct);
-            return comment;
+            return await GetCommentByIdAsync(comment.FeedCommentId, ct);
         }
 
         public async Task MarkFeedCommentAsDeletedAsync(int feedCommentId, CancellationToken ct = default)
