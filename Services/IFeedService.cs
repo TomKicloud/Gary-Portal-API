@@ -65,8 +65,7 @@ namespace GaryPortalAPI.Services
                 .Include(fp => fp.Likes.Where(fl => fl.IsLiked))
                 .Include(fp => fp.Poster)
                 .Include(fp => fp.PostTeam)
-                .Include(fp => fp.Comments)
-                    .ThenInclude(fpp => fpp.User)
+                .Include(fp => fp.Comments.Where(fc => !fc.IsDeleted))
                 .Include(fp => ((FeedPollPost)fp).PollAnswers)
                     .ThenInclude(fpa => fpa.Votes.Where(fpv => !fpv.IsDeleted))
                 .Where(fp => fp.PostCreatedAt <= fromDate && !fp.IsDeleted && (teamId == 0 || fp.PostIsGlobal || fp.TeamId == teamId))
@@ -78,12 +77,6 @@ namespace GaryPortalAPI.Services
             {
                 post.PosterDTO = post.Poster.ConvertToDTO();
                 post.Poster = null;
-
-                foreach (FeedComment comment in post.Comments)
-                {
-                    comment.UserDTO = comment.User.ConvertToDTO();
-                    comment.User = null;
-                }
             }
             return posts;
         }
