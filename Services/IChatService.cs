@@ -72,6 +72,15 @@ namespace GaryPortalAPI.Services
             return chat;
         }
 
+        //public async Task<Chat> GetChatByUUIDsAsync(string[] uuids, CancellationToken ct = default)
+        //{
+        //    Chat chat = await _context.Chats
+        //        .AsNoTracking()
+        //        .Include(c => c.ChatMembers.Where(cm => cm.IsInChat))
+        //            .ThenInclude(c => c.User)
+        //        .FirstOrDefaultAsync(c => c.ChatMembers.Any())
+        //}
+
         public async Task<Chat> EditChatAsync(ChatEditDetails newChat, CancellationToken ct = default)
         {
             Chat chat = await _context.Chats.AsNoTracking().FirstOrDefaultAsync(c => c.ChatUUID == newChat.ChatUUID, cancellationToken: ct);

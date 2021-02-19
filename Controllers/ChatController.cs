@@ -22,11 +22,13 @@ namespace GaryPortalAPI.Controllers
     {
         private readonly IChatService _chatService;
         private readonly IUserService _userService;
+        private readonly IChatBotService _chatBot;
 
-        public ChatController(IChatService chatService, IUserService userService)
+        public ChatController(IChatService chatService, IUserService userService, IChatBotService chatbot)
         {
             _chatService = chatService;
             _userService = userService;
+            _chatBot = chatbot;
         }
 
         [HttpGet("Chats/{userUUID}")]
@@ -146,6 +148,13 @@ namespace GaryPortalAPI.Controllers
         {
             await _chatService.ReportMessageAsync(report, ct);
             return Ok();
+        }
+
+        [HttpPost("BotMessage")]
+        public async Task<IActionResult> BotMessage([FromBody] ChatBotRequest request, CancellationToken ct = default)
+        {
+            string uuid = AuthenticationUtilities.GetUUIDFromIdentity(User);
+            return Ok(await _chatBot.GetResponseForCommand(request.input, uuid, request.version));
         }
 
     }
