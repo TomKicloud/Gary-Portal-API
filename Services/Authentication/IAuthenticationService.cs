@@ -39,10 +39,10 @@ namespace GaryPortalAPI.Services.Authentication
                 return null;
             }
 
-            if (await _userService.IsUserBannedAsync(user.UserUUID))
-                throw new AuthenticationException($"Banned");
+            if (await _userService.GetFirstBanOfTypeIfAnyAsnc(user.UserUUID, 1, ct) is UserBan ub && ub != null)
+                throw new AuthenticationException($"User has received a global ban, ban expires: {ub.BanExpires:HH:mm:ss, dd/MM/yy}");
 
-            user = await _userService.GetByIdAsync(user.UserUUID);
+            user = await _userService.GetByIdAsync(user.UserUUID, ct);
             user.UserAuthTokens = needsTokens ? await _tokenService.GenerateInitialTokensForUserAsync(user.UserUUID) : null;
             return user;
         }

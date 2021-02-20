@@ -12,8 +12,6 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-// For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-
 namespace GaryPortalAPI.Controllers
 {
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
@@ -31,6 +29,8 @@ namespace GaryPortalAPI.Controllers
         [Produces(typeof(ICollection<FeedPost>))]
         public async Task<IActionResult> GetFeed(long startfrom, int limit = 10, int teamId = 0, CancellationToken ct = default)
         {
+            if (!AuthenticationUtilities.IsAllowedFeed(User))
+                return BadRequest("User has been banned from Feed");
             if (startfrom == 0)
             {
                 startfrom = DateTime.UtcNow.Millisecond;
@@ -42,6 +42,8 @@ namespace GaryPortalAPI.Controllers
         [Produces(typeof(FeedPost))]
         public async Task<IActionResult> GetFeedPost(int feedPostId, CancellationToken ct = default)
         {
+            if (!AuthenticationUtilities.IsAllowedFeed(User))
+                return BadRequest("User has been banned from Feed");
             return Ok(await _feedService.GetByIdAsync(feedPostId, ct));
         }
 
@@ -50,7 +52,8 @@ namespace GaryPortalAPI.Controllers
         {
             if (!AuthenticationUtilities.IsSameUser(User, userUUID))
                 return Unauthorized("You do not have access to Like for this user");
-
+            if (!AuthenticationUtilities.IsAllowedFeed(User))
+                return BadRequest("User has been banned from Feed");
             await _feedService.ToggleLikeForPostAsync(feedPostId, userUUID, ct);
             return Ok();
         }
@@ -60,6 +63,8 @@ namespace GaryPortalAPI.Controllers
         [Produces(typeof(ICollection<FeedComment>))]
         public async Task<IActionResult> GetCommentsForPost(int postId, CancellationToken ct = default)
         {
+            if (!AuthenticationUtilities.IsAllowedFeed(User))
+                return BadRequest("User has been banned from Feed");
             return Ok(await _feedService.GetCommentsForPostAsync(postId, ct));
         }
 
@@ -67,12 +72,16 @@ namespace GaryPortalAPI.Controllers
         [Produces(typeof(FeedComment))]
         public async Task<IActionResult> GetComment(int commentId, CancellationToken ct = default)
         {
+            if (!AuthenticationUtilities.IsAllowedFeed(User))
+                return BadRequest("User has been banned from Feed");
             return Ok(await _feedService.GetCommentByIdAsync(commentId, ct));
         }
 
         [HttpPost("CommentOnPost")]
         public async Task<IActionResult> CommentOnPost([FromBody] FeedComment comment, CancellationToken ct = default)
         {
+            if (!AuthenticationUtilities.IsAllowedFeed(User))
+                return BadRequest("User has been banned from Feed");
             if (!AuthenticationUtilities.IsSameUser(User, comment.UserUUID))
                 return Unauthorized("You do not have access to comment for this user");
 
@@ -82,6 +91,8 @@ namespace GaryPortalAPI.Controllers
         [HttpPut("DeleteComment/{commentId}")]
         public async Task<IActionResult> DeleteComment(int commentId, CancellationToken ct = default)
         {
+            if (!AuthenticationUtilities.IsAllowedFeed(User))
+                return BadRequest("User has been banned from Feed");
             FeedComment comment = await _feedService.GetCommentByIdAsync(commentId, ct);
             if (!AuthenticationUtilities.IsSameUserOrPrivileged(User, comment.UserUUID))
                 return Unauthorized("You do not have access to delete this comment");
@@ -94,6 +105,8 @@ namespace GaryPortalAPI.Controllers
         [HttpPost("UploadMediaAttachment")]
         public async Task<IActionResult> UploadFeedMediaAttachment()
         {
+            if (!AuthenticationUtilities.IsAllowedFeed(User))
+                return BadRequest("User has been banned from Feed");
             if (HttpContext.Request.Form.Files.Count > 0)
                 return Ok(await _feedService.UploadMediaAttachmentAsync(HttpContext.Request.Form.Files[0]));
             return BadRequest();
@@ -102,12 +115,16 @@ namespace GaryPortalAPI.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateNewPost([FromBody] FeedPost post, CancellationToken ct = default)
         {
+            if (!AuthenticationUtilities.IsAllowedFeed(User))
+                return BadRequest("User has been banned from Feed");
             return Ok(await _feedService.UploadNewPostAsync(post, ct));
         }
 
         [HttpPut("DeletePost/{feedPostId}")]
         public async Task<IActionResult> DeletePost(int feedPostId, CancellationToken ct = default)
         {
+            if (!AuthenticationUtilities.IsAllowedFeed(User))
+                return BadRequest("User has been banned from Feed");
             FeedPost post = await _feedService.GetByIdAsync(feedPostId);
             if (!AuthenticationUtilities.IsSameUserOrPrivileged(User, post.PosterUUID))
                 return Unauthorized("You do not have access to modify this post");
@@ -119,6 +136,8 @@ namespace GaryPortalAPI.Controllers
         [HttpPut("VoteFor/{pollAnswerId}/{userUUID}")]
         public async Task<IActionResult> VoteForPoll(int pollAnswerId, string userUUID, bool isVotingFor = true)
         {
+            if (!AuthenticationUtilities.IsAllowedFeed(User))
+                return BadRequest("User has been banned from Feed");
             if (!AuthenticationUtilities.IsSameUser(User, userUUID))
                 return Unauthorized("You do not have access to vote for this user");
             await _feedService.VoteForPollAsync(userUUID, pollAnswerId, isVotingFor);
@@ -128,6 +147,8 @@ namespace GaryPortalAPI.Controllers
         [HttpPut("ResetVotes/{postId}")]
         public async Task<IActionResult> ResetPollVotes(int postId, CancellationToken ct = default)
         {
+            if (!AuthenticationUtilities.IsAllowedFeed(User))
+                return BadRequest("User has been banned from Feed");
             FeedPost post = await _feedService.GetByIdAsync(postId);
             if (!AuthenticationUtilities.IsSameUser(User, post.PosterUUID))
                 return Unauthorized("You do not have access to edit this post");
@@ -141,18 +162,24 @@ namespace GaryPortalAPI.Controllers
         [HttpGet("AditLogs")]
         public async Task<IActionResult> GetAditLogsAsync(int teamId = 0, CancellationToken ct = default)
         {
+            if (!AuthenticationUtilities.IsAllowedFeed(User))
+                return BadRequest("User has been banned from Feed");
             return Ok(await _feedService.GetAllAditLogsAsync(teamId, ct));
         }
 
         [HttpGet("AditLogs/{aditLogId}")]
         public async Task<IActionResult> GetAditLogByIdAsync(int aditLogId, CancellationToken ct = default)
         {
+            if (!AuthenticationUtilities.IsAllowedFeed(User))
+                return BadRequest("User has been banned from Feed");
             return Ok(await _feedService.GetAditLogAsync(aditLogId, ct));
         }
 
         [HttpPost("UploadAditLogAttachment")]
         public async Task<IActionResult> UploadAditLogAttachment(bool isVideo = false, CancellationToken ct = default)
         {
+            if (!AuthenticationUtilities.IsAllowedFeed(User))
+                return BadRequest("User has been banned from Feed");
             if (HttpContext.Request.Form.Files.Count >= 1)
             {
                 return Ok(await _feedService.UploadAditLogMediaAsync(HttpContext.Request.Form.Files.FirstOrDefault(), isVideo, ct: ct));
@@ -164,12 +191,16 @@ namespace GaryPortalAPI.Controllers
         [HttpPost("AditLog")]
         public async Task<IActionResult> CreateNewAditLog([FromBody] AditLog aditLog, CancellationToken ct = default)
         {
+            if (!AuthenticationUtilities.IsAllowedFeed(User))
+                return BadRequest("User has been banned from Feed");
             return Ok(await _feedService.UploadNewAditLogAsync(aditLog, ct));
         }
 
         [HttpPut("DeleteAditLog/{aditLogId}")]
         public async Task<IActionResult> DeleteAditLog(int aditLogId, CancellationToken ct = default)
         {
+            if (!AuthenticationUtilities.IsAllowedFeed(User))
+                return BadRequest("User has been banned from Feed");
             AditLog aditLog = await _feedService.GetAditLogAsync(aditLogId);
             if (!AuthenticationUtilities.IsSameUserOrPrivileged(User, aditLog.PosterUUID))
                 return Unauthorized("You do not have access to modify this Adit Log");
@@ -181,6 +212,8 @@ namespace GaryPortalAPI.Controllers
         [HttpPut("WatchedAditLog/{aditLogId}/{userUUID}")]
         public async Task<IActionResult> WatchAditLog(int aditLogId, string userUUID, CancellationToken ct = default)
         {
+            if (!AuthenticationUtilities.IsAllowedFeed(User))
+                return BadRequest("User has been banned from Feed");
             if (!AuthenticationUtilities.IsSameUser(User, userUUID))
                 Unauthorized("You do not have access to mark this adit log as watched");
             await _feedService.WatchAditLogAsync(aditLogId, userUUID, ct);
@@ -190,6 +223,8 @@ namespace GaryPortalAPI.Controllers
         [HttpPost("ReportPost/{postId}")]
         public async Task<IActionResult> ReportUser([FromBody] FeedReport report, CancellationToken ct = default)
         {
+            if (!AuthenticationUtilities.IsAllowedFeed(User))
+                return BadRequest("User has been banned from Feed");
             await _feedService.ReportPostAsync(report, ct);
             return Ok();
         }

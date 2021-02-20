@@ -29,6 +29,7 @@ namespace GaryPortalAPI.Services
         Task<User> CreateNewUserAsync(UserRegistration creatingUser, CancellationToken ct = default);
         Task<ICollection<UserBan>> GetUserCurrentBansAsync(string uuid, CancellationToken ct = default);
         Task<bool> IsUserBannedAsync(string uuid, CancellationToken ct = default);
+        Task<UserBan> GetFirstBanOfTypeIfAnyAsnc(string uuid, int banTypeId = 1, CancellationToken ct = default);
         Task<UserBan> BanUserAsync(UserBan ban, CancellationToken ct = default);
         Task RevokeBanAsync(int userBanId, CancellationToken ct = default);
         Task<UserBlock> BlockUserAsync(string uuid, string blockedUUID, CancellationToken ct = default);
@@ -294,6 +295,12 @@ namespace GaryPortalAPI.Services
         public async Task<bool> IsUserBannedAsync(string uuid, CancellationToken ct = default)
         {
             return (await GetUserCurrentBansAsync(uuid, ct)).Count != 0;
+        }
+
+        public async Task<UserBan> GetFirstBanOfTypeIfAnyAsnc(string uuid, int banTypeId = 1, CancellationToken ct = default)
+        {
+            return await _context.UserBans.Where(ub => ub.UserUUID.Equals(uuid) && ub.BanExpires > DateTime.UtcNow && ub.BanTypeId == banTypeId).FirstOrDefaultAsync();
+
         }
 
         public async Task<UserBan> BanUserAsync(UserBan ban, CancellationToken ct = default)

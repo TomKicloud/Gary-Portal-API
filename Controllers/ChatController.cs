@@ -1,18 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Security.Authentication;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using GaryPortalAPI.Models;
 using GaryPortalAPI.Models.Chat;
 using GaryPortalAPI.Services;
-using GaryPortalAPI.Services.Authentication;
 using GaryPortalAPI.Utilities;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using User = GaryPortalAPI.Models.User;
 
 namespace GaryPortalAPI.Controllers
 {
@@ -35,6 +32,8 @@ namespace GaryPortalAPI.Controllers
         [Produces(typeof(ICollection<Chat>))]
         public async Task<IActionResult> GetChatsForUser(string userUUID, CancellationToken ct = default)
         {
+            if (!AuthenticationUtilities.IsAllowedChat(User))
+                return BadRequest("User has been banned from Chat");
             return Ok(await _chatService.GetAllChatsForUserAsync(userUUID, ct));
         }
 
@@ -42,6 +41,8 @@ namespace GaryPortalAPI.Controllers
         [Produces(typeof(Chat))]
         public async Task<IActionResult> GetChatById(string chatUUID, CancellationToken ct = default)
         {
+            if (!AuthenticationUtilities.IsAllowedChat(User))
+                return BadRequest("User has been banned from Chat");
             return Ok(await _chatService.GetChatByIdAsync(chatUUID, ct));
         }
 
@@ -49,6 +50,8 @@ namespace GaryPortalAPI.Controllers
         [Produces(typeof(ICollection<ChatMessage>))]
         public async Task<IActionResult> GetMessagesForChat(string chatUUID, long startfrom, int limit = 20, CancellationToken ct = default)
         {
+            if (!AuthenticationUtilities.IsAllowedChat(User))
+                return BadRequest("User has been banned from Chat");
             return Ok(await _chatService.GetMessagesForChatAsync(chatUUID, startfrom, limit, ct));
         }
 
@@ -56,6 +59,8 @@ namespace GaryPortalAPI.Controllers
         [Produces(typeof(ChatMessage))]
         public async Task<IActionResult> GetMessageById(string messageUUID, CancellationToken ct = default)
         {
+            if (!AuthenticationUtilities.IsAllowedChat(User))
+                return BadRequest("User has been banned from Chat");
             return Ok(await _chatService.GetMessageByIdAsync(messageUUID, ct));
         }
 
@@ -63,6 +68,8 @@ namespace GaryPortalAPI.Controllers
         [Produces(typeof(ChatMember))]
         public async Task<IActionResult> AddUserToChat(string userUUID, string chatUUID, CancellationToken ct = default)
         {
+            if (!AuthenticationUtilities.IsAllowedChat(User))
+                return BadRequest("User has been banned from Chat");
             return Ok(await _chatService.AddUserToChatAsync(userUUID, chatUUID, ct));
         }
 
@@ -70,6 +77,8 @@ namespace GaryPortalAPI.Controllers
         [Produces(typeof(ChatMember))]
         public async Task<IActionResult> AddUserToChatByUsername(string username, string chatUUID, CancellationToken ct = default)
         {
+            if (!AuthenticationUtilities.IsAllowedChat(User))
+                return BadRequest("User has been banned from Chat");
             Chat chat = await _chatService.GetChatByIdAsync(chatUUID, ct);
             if (chat.ChatMembers.Where(cm => cm.UserUUID == AuthenticationUtilities.GetUUIDFromIdentity(User)).Any()) {
                 string uuid = await _userService.GetUUIDFromUsername(username, ct);
@@ -95,13 +104,16 @@ namespace GaryPortalAPI.Controllers
         {
             if (!ModelState.IsValid)
                 return BadRequest("Invalid message details");
-
+            if (!AuthenticationUtilities.IsAllowedChat(User))
+                return BadRequest("User has been banned from Chat");
             return Ok(await _chatService.AddMessageToChatAsync(message, chatUUID, ct));
         }
 
         [HttpPut("Messages/Delete/{messageUUID}")]
         public async Task<IActionResult> DeleteMessage(string messageUUID, CancellationToken ct = default)
         {
+            if (!AuthenticationUtilities.IsAllowedChat(User))
+                return BadRequest("User has been banned from Chat");
             return Ok(await _chatService.RemoveMessageAsync(messageUUID, ct));
         }
 
@@ -111,7 +123,8 @@ namespace GaryPortalAPI.Controllers
         {
             if (HttpContext.Request.Form.Files.Count > 0)
                 return Ok(await _chatService.UploadChatAttachmentAsync(HttpContext.Request.Form.Files[0], chatUUID, ct));
-
+            if (!AuthenticationUtilities.IsAllowedChat(User))
+                return BadRequest("User has been banned from Chat");
             return BadRequest("No files specified");
         }
 
@@ -121,7 +134,8 @@ namespace GaryPortalAPI.Controllers
         {
             if (!ModelState.IsValid)
                 return BadRequest("Invalid chat object");
-
+            if (!AuthenticationUtilities.IsAllowedChat(User))
+                return BadRequest("User has been banned from Chat");
             return Ok(await _chatService.CreateNewChatAsync(chat, ct));
         }
 
@@ -131,7 +145,8 @@ namespace GaryPortalAPI.Controllers
         {
             if (!ModelState.IsValid)
                 return BadRequest("Invalid chat details");
-
+            if (!AuthenticationUtilities.IsAllowedChat(User))
+                return BadRequest("User has been banned from Chat");
             return Ok(await _chatService.EditChatAsync(details, ct));
         }
 
@@ -139,6 +154,8 @@ namespace GaryPortalAPI.Controllers
         [HttpPut("Chats/{chatUUID}/MarkAsRead")]
         public async Task<IActionResult> MarkChatAsRead(string chatUUID, CancellationToken ct = default)
         {
+            if (!AuthenticationUtilities.IsAllowedChat(User))
+                return BadRequest("User has been banned from Chat");
             await _chatService.MarkChatAsReadAsync(AuthenticationUtilities.GetUUIDFromIdentity(User), chatUUID, ct);
             return Ok();
         }
@@ -146,6 +163,8 @@ namespace GaryPortalAPI.Controllers
         [HttpPost("ReportMessage/{messageUUID}")]
         public async Task<IActionResult> ReportUser([FromBody] ChatMessageReport report, CancellationToken ct = default)
         {
+            if (!AuthenticationUtilities.IsAllowedChat(User))
+                return BadRequest("User has been banned from Chat");
             await _chatService.ReportMessageAsync(report, ct);
             return Ok();
         }
@@ -153,6 +172,8 @@ namespace GaryPortalAPI.Controllers
         [HttpPost("BotMessage")]
         public async Task<IActionResult> BotMessage([FromBody] ChatBotRequest request, CancellationToken ct = default)
         {
+            if (!AuthenticationUtilities.IsAllowedChat(User))
+                return BadRequest("User has been banned from Chat");
             string uuid = AuthenticationUtilities.GetUUIDFromIdentity(User);
             return Ok(await _chatBot.GetResponseForCommand(request.input, uuid, request.version));
         }

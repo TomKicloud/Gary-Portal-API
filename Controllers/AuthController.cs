@@ -41,7 +41,7 @@ namespace GaryPortalAPI.Controllers
                 return Ok(user);
             }
             catch (AuthenticationException ex) {
-                return Unauthorized(ex.Message);
+                return BadRequest(ex.Message);
             }
           
         }

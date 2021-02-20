@@ -96,6 +96,7 @@ namespace GaryPortalAPI
             {
                 endpoints.MapControllers();
                 endpoints.MapHub<ChatHub>("/chathub");
+                endpoints.MapHub<GaryPortalHub>("/apphub");
             });
         }
     }

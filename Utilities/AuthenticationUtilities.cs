@@ -44,5 +44,15 @@ namespace GaryPortalAPI.Utilities
         {
             return identity.HasClaim(ClaimTypes.Role, "staff");
         }
+
+        public static bool IsAllowedChat(ClaimsPrincipal identity)
+        {
+            return identity.HasClaim(ClaimTypes.UserData, "chatAllowed");
+        }
+
+        public static bool IsAllowedFeed(ClaimsPrincipal identity)
+        {
+            return identity.HasClaim(ClaimTypes.UserData, "feedAllowed");
+        }
     }
 }

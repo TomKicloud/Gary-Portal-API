@@ -47,10 +47,15 @@ namespace GaryPortalAPI.Services.Authentication
             if (user == null)
                 return null;
 
+            UserBan chatBan = await _userService.GetFirstBanOfTypeIfAnyAsnc(userUUID, 2);
+            UserBan feedBan = await _userService.GetFirstBanOfTypeIfAnyAsnc(userUUID, 3);
+
             JwtSecurityTokenHandler tokenHandler = new JwtSecurityTokenHandler();
             byte[] secretKey = Encoding.ASCII.GetBytes(_apiSettings.Secret);
             List<Claim> claims = new List<Claim> { new Claim(ClaimTypes.Name, userUUID) };
             claims.Add(new Claim(ClaimTypes.Role, user.UserIsAdmin ? "admin" : user.UserIsStaff ? "staff" : "user"));
+            if (chatBan == null) claims.Add(new Claim(ClaimTypes.UserData, "chatAllowed"));
+            if (feedBan == null) claims.Add(new Claim(ClaimTypes.UserData, "feedAllowed"));
 
             SecurityTokenDescriptor tokenDescriptor = new SecurityTokenDescriptor
             {
@@ -115,7 +120,7 @@ namespace GaryPortalAPI.Services.Authentication
             UserRefreshToken token = await _context.UserRefreshTokens
                 .AsNoTracking()
                 .FirstOrDefaultAsync(t => t.RefreshToken == refreshToken && t.UserUUID == userUUID);
-            if (token == null)
+            if (token == null || await _userService.GetFirstBanOfTypeIfAnyAsnc(userUUID, 1, ct) != null)
                 return null;
 
             token.TokenIsEnabled = false;
