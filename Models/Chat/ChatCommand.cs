@@ -17,4 +17,28 @@ namespace GaryPortalAPI.Models.Chat
         public string input { get; set; }
         public string version { get; set; }
     }
+
+    public class GifResponse
+    {
+        public GifArray[] results { get; set; }
+    }
+
+    public class GifArray
+    {
+        public string id { get; set; }
+        public string title { get; set; }
+        public string h1_title { get; set; }
+
+        public GifDetails[] media { get; set; }
+    }
+
+    public class GifDetails
+    {
+        public Gif gif { get; set; }
+        public Gif mediumgif { get; set; }
+    }
+    public class Gif
+    {
+        public string url { get; set; }
+    }
 }

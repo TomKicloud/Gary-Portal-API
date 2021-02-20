@@ -4,6 +4,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using GaryPortalAPI.Models;
 using GaryPortalAPI.Models.Chat;
+using Newtonsoft.Json;
+using RestSharp;
 
 namespace GaryPortalAPI.Services
 {
@@ -39,6 +41,8 @@ namespace GaryPortalAPI.Services
             new ChatCommand { Command = "?8ball", CommandDescription = "Answers your question!", CommandFriendlyName = "Magic 8 Ball", CommandUsage = "?8ball [question]" },
             new ChatCommand { Command = "?stankrate", CommandDescription = "Rates your stankiness", CommandFriendlyName = "Stank Rate", CommandUsage = "?stankrate {username}" },
             new ChatCommand { Command = "?simprate", CommandDescription = "Rates your simpiness", CommandFriendlyName = "Simp Rate", CommandUsage = "?simprate {username}" },
+            new ChatCommand { Command = "?hitman", CommandDescription = "Hires a hitman", CommandFriendlyName = "Hitman", CommandUsage = "?hitman {username}" },
+            new ChatCommand { Command = "?gif", CommandDescription = "Searches for a gif", CommandFriendlyName = "Gif Search", CommandUsage = "?gif {search term}"},
 
             new ChatCommand { Command = "?globalban", CommandDescription = "Globally Bans a user", CommandFriendlyName = "Global Ban", RequiresAdmin = true, CommandUsage = "?globalban [username] {reason}" },
             new ChatCommand { Command = "?chatban", CommandDescription = "Bans a user from the chat", CommandFriendlyName = "Chat Ban", RequiresAdmin = true, CommandUsage = "?chatban [username] {reason}" },
@@ -88,6 +92,8 @@ namespace GaryPortalAPI.Services
                 "?globalban" => await HandleGlobalBan(input, uuid),
                 "?chatban" => await HandleChatBan(input, uuid),
                 "?feedban" => await HandleFeedBan(input, uuid),
+                "?hitman" => await HandleHitman(input),
+                "?gif" => await HandleGif(input),
                 _ => "Error: Invalid Command specified\nPlease use `?help` for more information.",
             };
         }
@@ -261,6 +267,42 @@ namespace GaryPortalAPI.Services
             UserBan ban = new UserBan { UserBanId = 0, UserUUID = banUUID, BanIssued = DateTime.UtcNow, BanExpires = DateTime.UtcNow.AddDays(1), BanTypeId = 3, BanReason = reason, BannedByUUID = uuid };
             await _userService.BanUserAsync(ban);
             return "--Al Murray Bot--\nTemporary feed ban applied on user, manage this users's bans directly in the staff room to modify this ban";
+        }
+
+        private async Task<string> HandleHitman(string input)
+        {
+            input = string.Join(" ", input.Split((char[])null, StringSplitOptions.RemoveEmptyEntries).Select(i => i.Trim()));
+            string[] words = input.Split(" ");
+            if (words.Length < 2)
+            {
+                return "You hired a hitman, but didn't tell him who to target!";
+            }
+            User user = await _userService.GetByIdAsync(await _userService.GetUUIDFromUsername(words[1]));
+            if (user == null)
+            {
+                return "You hired a hitman, but he couldn't find that target";
+            }
+            return $"You sent a hitman after {user.UserFullName}, only time will tell if they succeed";
+        }
+
+        private static async Task<string> HandleGif(string input)
+        {
+            input = string.Join(" ", input.Split((char[])null, StringSplitOptions.RemoveEmptyEntries).Select(i => i.Trim()));
+            string[] words = input.Split(" ");
+            if (words.Length < 2)
+            {
+                return "";
+            }
+            string query = string.Join(" ", input.Split((char[])null, StringSplitOptions.RemoveEmptyEntries).Select(i => i.Trim()).Skip(1));
+            RestClient client = new RestClient("https://g.tenor.com/");
+            RestRequest request = new RestRequest("v1/search", Method.GET);
+            request.AddQueryParameter("q", query);
+            request.AddParameter("key", "3U4OXKNOBIM0");
+            request.AddParameter("limit", 1);
+            var response = await client.ExecuteAsync<GifResponse>(request);
+            string responseString = response.Content;
+            GifResponse gifResponse = JsonConvert.DeserializeObject<GifResponse>(responseString);
+            return gifResponse.results.FirstOrDefault().media.FirstOrDefault().gif.url;
         }
 
         public void Dispose()
