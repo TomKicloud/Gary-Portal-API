@@ -11,5 +11,10 @@ namespace GaryPortalAPI.Hubs
         {
             await Clients.All.SendAsync("BanStatusUpdated", uuid);
         }
+
+        public async Task KeepAlive()
+        {
+            await Clients.Client(Context.ConnectionId).SendAsync("KeepAlive");
+        }
     }
 }
