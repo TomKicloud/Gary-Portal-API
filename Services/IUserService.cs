@@ -36,7 +36,8 @@ namespace GaryPortalAPI.Services
         Task UnblockUserAsync(string uuid, string blockedUUID, CancellationToken ct = default);
         Task<ICollection<UserBlock>> GetAllBlocksAsync(string uuid, CancellationToken ct = default);
         Task ReportUserAsync(UserReport report, CancellationToken ct = default);
-        Task MarkReportAsDeletedAsync(int reportId, CancellationToken ct = default);    
+        Task MarkReportAsDeletedAsync(int reportId, CancellationToken ct = default);
+        Task AddAPNS(string uuid, string apns);
     }
 
     public class UserService : IUserService
@@ -113,7 +114,7 @@ namespace GaryPortalAPI.Services
         {
             return await _context.Users
                 .AsNoTracking()
-                .Where(u => u.UserName == username)
+                .Where(u => u.UserName.ToLower() == username.ToLower())
                 .Select(u => u.UserUUID)
                 .FirstOrDefaultAsync(ct);
         }
@@ -125,7 +126,7 @@ namespace GaryPortalAPI.Services
 
         public async Task<bool> IsUsernameFreeAsync(string username, CancellationToken ct = default)
         {
-            return await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.UserName == username, ct) == null;
+            return await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.UserName.ToLower() == username.ToLower(), ct) == null;
         }
 
         public async Task<UserPoints> GetPointsForUserAsync(string userUUID, CancellationToken ct = default)
@@ -174,7 +175,7 @@ namespace GaryPortalAPI.Services
             if (user == null) return null;
 
             user.UserAuthentication.UserEmail = details.UserEmail;
-            user.UserName = details.UserName;
+            user.UserName = details.UserName.ToLower();
             user.UserFullName = details.FullName;
             user.UserProfileImageUrl = details.ProfilePictureUrl;
             _context.Update(user);
@@ -185,7 +186,7 @@ namespace GaryPortalAPI.Services
         public async Task<User> StaffManageUserDetailsAsync(string uuid, StaffManagedUserDetails details, CancellationToken ct = default)
         {
             User user = await GetByIdAsync(uuid, ct);
-            user.UserName = details.UserName;
+            user.UserName = details.UserName.ToLower();
             user.UserSpanishName = details.SpanishName;
             user.UserProfileImageUrl = details.ProfilePictureUrl;
             user.UserPoints.AmigoPoints = details.AmigoPoints;
@@ -389,6 +390,13 @@ namespace GaryPortalAPI.Services
                 _context.Update(report);
                 await _context.SaveChangesAsync();
             }
+        }
+
+        public async Task AddAPNS(string uuid, string apns)
+        {
+            UserAPNS newAPNS = new UserAPNS { UserAPNSId = 0, UserUUID = uuid, APNSToken = apns };
+            await _context.UserAPNS.AddAsync(newAPNS);
+            await _context.SaveChangesAsync();
         }
     }
 }

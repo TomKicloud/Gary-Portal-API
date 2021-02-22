@@ -32,7 +32,7 @@ namespace GaryPortalAPI.Services.Authentication
         {
             User user = await _context.Users
                 .Include(u => u.UserAuthentication)
-                .FirstOrDefaultAsync(u => u.UserName == authUser.AuthenticatorString.ToLower() || u.UserAuthentication.UserEmail.ToLower() == authUser.AuthenticatorString.ToLower());
+                .FirstOrDefaultAsync(u => u.UserName.ToLower() == authUser.AuthenticatorString.ToLower() || u.UserAuthentication.UserEmail.ToLower() == authUser.AuthenticatorString.ToLower());
             if (user == null) return null;
 
             if (!_hashingService.VerifyHash(user.UserAuthentication.UserPassHash, user.UserAuthentication.UserPassSalt, authUser.Password)) {

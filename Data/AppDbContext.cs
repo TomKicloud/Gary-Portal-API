@@ -19,6 +19,7 @@ public class AppDbContext : DbContext
     public DbSet<UserRanks> UserRanks { get; set; }
     public DbSet<UserTeam> UserTeams { get; set; }
     public DbSet<UserBlock> UserBlocks { get; set; }
+    public DbSet<UserAPNS> UserAPNS { get; set; }
 
     public DbSet<BanType> BanTypes { get; set; }
     public DbSet<UserBan> UserBans { get; set; }
@@ -105,6 +106,13 @@ public class AppDbContext : DbContext
                 .HasOne(u => u.UserTeam)
                 .WithOne(ut => ut.User)
                 .HasForeignKey<UserTeam>(ut => ut.UserUUID)
+                .OnDelete(DeleteBehavior.Cascade)
+                .IsRequired();
+
+            entity
+                .HasMany(u => u.APNSTokens)
+                .WithOne()
+                .HasForeignKey(apns => apns.UserUUID)
                 .OnDelete(DeleteBehavior.Cascade)
                 .IsRequired();
         });

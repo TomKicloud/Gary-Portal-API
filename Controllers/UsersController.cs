@@ -129,5 +129,13 @@ namespace GaryPortalAPI.Controllers
         {
             return Ok(await _userRepository.GetAllBlocksAsync(uuid, ct));
         }
+
+        [AllowAnonymous]
+        [HttpPost("AddAPNS/{uuid}/{apns}")]
+        public async Task<IActionResult> AddAPNS(string uuid, string apns)
+        {
+            await _userRepository.AddAPNS(uuid, apns);
+            return Ok();
+        }
     }
 }
