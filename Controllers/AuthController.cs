@@ -37,7 +37,7 @@ namespace GaryPortalAPI.Controllers
             {
                 User user = await _authenticationService.Authenticate(authUser, needsTokens, ct);
                 if (user == null)
-                    return BadRequest("Invalid login attempt");
+                    return NotFound("Invalid login attempt");
                 return Ok(user);
             }
             catch (AuthenticationException ex) {
