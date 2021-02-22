@@ -298,7 +298,7 @@ namespace GaryPortalAPI.Services
                 foreach (string token in userAPNSTokens)
                 {
                     await _userService.PostNotification(token,
-                        new APSAlert { title = notificationTitle, subtitle = isGroupChat ? $"From: {members.FirstOrDefault(cm => cm.UserUUID != senderUUID).UserDTO.UserFullName}" : string.Empty, body = content });
+                        new APSAlert { title = notificationTitle, subtitle = isGroupChat ? $"From: {members.FirstOrDefault(cm => cm.UserUUID == senderUUID).UserDTO.UserFullName}" : string.Empty, body = content });
                 }
             }
         }
