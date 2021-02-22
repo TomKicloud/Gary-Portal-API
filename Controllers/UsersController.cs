@@ -148,7 +148,7 @@ namespace GaryPortalAPI.Controllers
             ICollection<string> tokens = await _userRepository.GetAPNSFromUUIDAsync(userUUID);
             foreach (string token in tokens)
             {
-                await _userRepository.PostNotification(token, new APSAlert { body = content });
+                await _userRepository.PostNotification(token, Notification.CreateNotification(new APSAlert { body = content }));
             }
             return Ok();
         }

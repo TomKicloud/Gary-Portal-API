@@ -42,7 +42,7 @@ namespace GaryPortalAPI.Services
         Task MarkReportAsDeletedAsync(int reportId, CancellationToken ct = default);
         Task AddAPNS(string uuid, string apns);
         Task<ICollection<string>> GetAPNSFromUUIDAsync(string uuid, CancellationToken ct = default);
-        Task PostNotification(string apns, APSAlert alert);
+        Task PostNotification(string apns, Notification notification);
     }
 
     public class UserService : IUserService
@@ -415,11 +415,11 @@ namespace GaryPortalAPI.Services
             return await _context.UserAPNS.Where(u => u.UserUUID == uuid).Select(u => u.APNSToken).ToListAsync(ct);
         }
 
-        public async Task PostNotification(string apns, APSAlert alert)
+        public async Task PostNotification(string apns, Notification notification)
         {
             ApnSettings apnSettings = _apiSettings.APNSSettings.ConvertToAPNSettings();
             var apn = new ApnSender(apnSettings, new System.Net.Http.HttpClient());
-            await apn.SendAsync(Notification.CreateNotification(alert), apns);
+            await apn.SendAsync(notification, apns);
         }
     }
 }

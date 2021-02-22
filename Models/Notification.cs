@@ -15,14 +15,22 @@ namespace GaryPortalAPI.Models
         [JsonProperty("aps")]
         public ApsPayload Aps { get; set; }
 
-        public static Notification CreateNotification(APSAlert alertContent)
+        [JsonProperty("chatUUID")]
+        public string chatUUID { get; set; }
+
+        [JsonProperty("feedPostId")]
+        public int feedPostId { get; set; }
+
+        public static Notification CreateNotification(APSAlert alertContent, string chatUUID = null, int? feedPostId = null)
         {
             return new Notification
             {
                 Aps = new ApsPayload
                 {
                     Alert = alertContent
-                }
+                },
+                chatUUID = chatUUID,
+                feedPostId = feedPostId ?? 0
             };
         }
     }

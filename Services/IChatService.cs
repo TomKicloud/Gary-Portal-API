@@ -297,8 +297,11 @@ namespace GaryPortalAPI.Services
                 ICollection<string> userAPNSTokens = await _userService.GetAPNSFromUUIDAsync(member.UserUUID, ct);
                 foreach (string token in userAPNSTokens)
                 {
-                    await _userService.PostNotification(token,
-                        new APSAlert { title = notificationTitle, subtitle = isGroupChat ? $"From: {members.FirstOrDefault(cm => cm.UserUUID == senderUUID).UserDTO.UserFullName}" : string.Empty, body = content });
+                    Notification notification = Notification.CreateNotification(
+                        new APSAlert { title = notificationTitle, subtitle = isGroupChat ? $"From: {members.FirstOrDefault(cm => cm.UserUUID == senderUUID).UserDTO.UserFullName}" : string.Empty, body = content },
+                        chatUUID: chatUUID);
+
+                    await _userService.PostNotification(token, notification);
                 }
             }
         }
