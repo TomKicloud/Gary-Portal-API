@@ -3,12 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using CorePush.Apple;
+using GaryPortalAPI.Data;
 using GaryPortalAPI.Models;
 using GaryPortalAPI.Services;
 using GaryPortalAPI.Utilities;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 
 namespace GaryPortalAPI.Controllers
 {
@@ -17,10 +20,11 @@ namespace GaryPortalAPI.Controllers
     public class UsersController : Controller
     {
         private readonly IUserService _userRepository;
-
-        public UsersController(IUserService userRepository)
+        private readonly ApiSettings _apiSettings;
+        public UsersController(IUserService userRepository, IOptions<ApiSettings> settings)
         {
             _userRepository = userRepository;
+            _apiSettings = settings.Value;
         }
 
         [HttpGet]
@@ -135,6 +139,17 @@ namespace GaryPortalAPI.Controllers
         public async Task<IActionResult> AddAPNS(string uuid, string apns)
         {
             await _userRepository.AddAPNS(uuid, apns);
+            return Ok();
+        }
+
+        [HttpPost("SendNotification/{userUUID}")]
+        public async Task<IActionResult> SendNotification([FromBody] string content, string userUUID)
+        {
+            ICollection<string> tokens = await _userRepository.GetAPNSFromUUIDAsync(userUUID);
+            foreach (string token in tokens)
+            {
+                await _userRepository.PostNotification(token, new APSAlert { body = content });
+            }
             return Ok();
         }
     }

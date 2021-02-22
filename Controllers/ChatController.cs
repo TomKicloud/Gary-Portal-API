@@ -178,5 +178,12 @@ namespace GaryPortalAPI.Controllers
             return Ok(await _chatBot.GetResponseForCommand(request.input, uuid, request.version));
         }
 
+        [HttpPost("Notification/{chatUUID}/{senderUUID}")]
+        public async Task<IActionResult> PostNotification([FromBody] string content, string chatUUID, string senderUUID, CancellationToken ct = default)
+        {
+            await _chatService.PostNotificationToChat(chatUUID, senderUUID, content, ct);
+            return Ok();
+        }
+
     }
 }

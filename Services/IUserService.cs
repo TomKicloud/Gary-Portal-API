@@ -4,10 +4,13 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using CorePush.Apple;
+using GaryPortalAPI.Data;
 using GaryPortalAPI.Models;
 using GaryPortalAPI.Services.Authentication;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace GaryPortalAPI.Services
 {
@@ -38,17 +41,21 @@ namespace GaryPortalAPI.Services
         Task ReportUserAsync(UserReport report, CancellationToken ct = default);
         Task MarkReportAsDeletedAsync(int reportId, CancellationToken ct = default);
         Task AddAPNS(string uuid, string apns);
+        Task<ICollection<string>> GetAPNSFromUUIDAsync(string uuid, CancellationToken ct = default);
+        Task PostNotification(string apns, APSAlert alert);
     }
 
     public class UserService : IUserService
     {
         private readonly AppDbContext _context;
         private readonly IHashingService _hashingService;
+        private readonly ApiSettings _apiSettings;
 
-        public UserService(AppDbContext context, IHashingService hashingService)
+        public UserService(AppDbContext context, IHashingService hashingService, IOptions<ApiSettings> settings)
         {
             _context = context;
             _hashingService = hashingService;
+            _apiSettings = settings.Value;
         }
 
         public void Dispose()
@@ -401,6 +408,18 @@ namespace GaryPortalAPI.Services
                 await _context.UserAPNS.AddAsync(newAPNS);
                 await _context.SaveChangesAsync();
             }
+        }
+
+        public async Task<ICollection<string>> GetAPNSFromUUIDAsync(string uuid, CancellationToken ct = default)
+        {
+            return await _context.UserAPNS.Where(u => u.UserUUID == uuid).Select(u => u.UserUUID).ToListAsync(ct);
+        }
+
+        public async Task PostNotification(string apns, APSAlert alert)
+        {
+            ApnSettings apnSettings = _apiSettings.APNSSettings.ConvertToAPNSettings();
+            var apn = new ApnSender(apnSettings, new System.Net.Http.HttpClient());
+            await apn.SendAsync(Notification.CreateNotification(alert), apns);
         }
     }
 }
