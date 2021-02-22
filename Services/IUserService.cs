@@ -412,7 +412,7 @@ namespace GaryPortalAPI.Services
 
         public async Task<ICollection<string>> GetAPNSFromUUIDAsync(string uuid, CancellationToken ct = default)
         {
-            return await _context.UserAPNS.Where(u => u.UserUUID == uuid).Select(u => u.UserUUID).ToListAsync(ct);
+            return await _context.UserAPNS.Where(u => u.UserUUID == uuid).Select(u => u.APNSToken).ToListAsync(ct);
         }
 
         public async Task PostNotification(string apns, APSAlert alert)
