@@ -395,8 +395,12 @@ namespace GaryPortalAPI.Services
         public async Task AddAPNS(string uuid, string apns)
         {
             UserAPNS newAPNS = new UserAPNS { UserAPNSId = 0, UserUUID = uuid, APNSToken = apns };
-            await _context.UserAPNS.AddAsync(newAPNS);
-            await _context.SaveChangesAsync();
+            UserAPNS existingAPNS = await _context.UserAPNS.Where(t => t.APNSToken == apns).FirstOrDefaultAsync();
+            if (existingAPNS == null)
+            {
+                await _context.UserAPNS.AddAsync(newAPNS);
+                await _context.SaveChangesAsync();
+            }
         }
     }
 }
