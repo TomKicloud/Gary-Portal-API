@@ -19,10 +19,12 @@ namespace GaryPortalAPI.Controllers
     public class FeedController : Controller
     {
         private readonly IFeedService _feedService;
+        private readonly IUserService _userService;
 
-        public FeedController(IFeedService feedService)
+        public FeedController(IFeedService feedService, IUserService userService)
         {
             _feedService = feedService;
+            _userService = userService;
         }
 
         [HttpGet]
@@ -226,6 +228,22 @@ namespace GaryPortalAPI.Controllers
             if (!AuthenticationUtilities.IsAllowedFeed(User))
                 return BadRequest("User has been banned from Feed");
             await _feedService.ReportPostAsync(report, ct);
+            return Ok();
+        }
+
+        [HttpPost("CommentNotification/{postId}")]
+        public async Task<IActionResult> CommentNotification([FromBody] string content, int postId, CancellationToken ct = default)
+        {
+            FeedPost post = await _feedService.GetByIdAsync(postId, ct);
+            if (post == null)
+                return BadRequest();
+
+            Notification notification = Notification.CreateNotification(new APSAlert { body = content }, feedPostId: postId);
+            ICollection<string> tokens = await _userService.GetAPNSFromUUIDAsync(post.PosterUUID);
+            foreach (string token in tokens)
+            {
+                await _userService.PostNotification(token, notification);
+            }
             return Ok();
         }
     }
