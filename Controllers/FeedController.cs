@@ -238,6 +238,11 @@ namespace GaryPortalAPI.Controllers
             if (post == null)
                 return BadRequest();
 
+            UserBan globalBan = await _userService.GetFirstBanOfTypeIfAnyAsnc(post.PosterUUID, 1, ct);
+            UserBan feedBan = await _userService.GetFirstBanOfTypeIfAnyAsnc(post.PosterUUID, 3, ct);
+            if (globalBan != null || feedBan != null)
+                return Ok();
+
             Notification notification = Notification.CreateNotification(new APSAlert { body = content }, feedPostId: postId);
             ICollection<string> tokens = await _userService.GetAPNSFromUUIDAsync(post.PosterUUID);
             foreach (string token in tokens)

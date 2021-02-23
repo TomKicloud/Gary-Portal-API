@@ -23,6 +23,7 @@ namespace GaryPortalAPI.Models
         public string UserEmail { get; set; }
         public string FullName { get; set; }
         public string ProfilePictureUrl { get; set; }
+        public bool NotificationsMuted { get; set; }
     }
 
     public class StaffManagedUserDetails
@@ -160,5 +161,6 @@ namespace GaryPortalAPI.Models
         public int UserAPNSId{ get; set; }
         public string UserUUID { get; set; }
         public string APNSToken { get; set; }
+        public bool IsMuted { get; set; }
     }
 }

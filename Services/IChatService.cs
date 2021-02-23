@@ -294,6 +294,11 @@ namespace GaryPortalAPI.Services
 
             foreach (ChatMember member in members)
             {
+                UserBan globalBan = await _userService.GetFirstBanOfTypeIfAnyAsnc(member.UserUUID, 1, ct);
+                UserBan chatBan = await _userService.GetFirstBanOfTypeIfAnyAsnc(member.UserUUID, 2, ct);
+                if (globalBan != null || chatBan != null)
+                    return;
+
                 ICollection<string> userAPNSTokens = await _userService.GetAPNSFromUUIDAsync(member.UserUUID, ct);
                 foreach (string token in userAPNSTokens)
                 {
