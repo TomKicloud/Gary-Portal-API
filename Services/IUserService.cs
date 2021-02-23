@@ -185,15 +185,8 @@ namespace GaryPortalAPI.Services
             user.UserName = details.UserName.ToLower();
             user.UserFullName = details.FullName;
             user.UserProfileImageUrl = details.ProfilePictureUrl;
+            user.NotificationsMuted = details.NotificationsMuted;
             _context.Update(user);
-
-
-            ICollection<UserAPNS> userTokens = await _context.UserAPNS.Where(u => u.UserUUID == uuid && u.IsMuted != details.NotificationsMuted).ToListAsync();
-            foreach (UserAPNS apns in userTokens)
-            {
-                apns.IsMuted = details.NotificationsMuted;
-                _context.Update(apns);
-            }
 
             await _context.SaveChangesAsync(ct);
             return user;
@@ -421,7 +414,11 @@ namespace GaryPortalAPI.Services
 
         public async Task<ICollection<string>> GetAPNSFromUUIDAsync(string uuid, CancellationToken ct = default)
         {
-            return await _context.UserAPNS.Where(u => u.UserUUID == uuid && !u.IsMuted).Select(u => u.APNSToken).ToListAsync(ct);
+            if (await _context.Users.Where(u => u.UserUUID == uuid).Select(u => u.NotificationsMuted).FirstOrDefaultAsync(ct))
+            {
+                return await _context.UserAPNS.Where(u => u.UserUUID == uuid).Select(u => u.APNSToken).ToListAsync(ct);
+            }
+            return null;
         }
 
         public async Task PostNotification(string apns, Notification notification)

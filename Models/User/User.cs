@@ -49,6 +49,7 @@ namespace GaryPortalAPI.Models
         public string UserQuote { get; set; }
         public string UserBio { get; set; }
         public string UserGender { get; set; }
+        public bool NotificationsMuted { get; set; }
         public bool UserIsStaff { get; set; }
         public bool UserIsAdmin { get; set; }
         public string UserStanding { get; set; }
@@ -161,6 +162,5 @@ namespace GaryPortalAPI.Models
         public int UserAPNSId{ get; set; }
         public string UserUUID { get; set; }
         public string APNSToken { get; set; }
-        public bool IsMuted { get; set; }
     }
 }
