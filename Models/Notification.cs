@@ -10,6 +10,9 @@ namespace GaryPortalAPI.Models
         {
             [JsonProperty("alert")]
             public APSAlert Alert { get; set; }
+
+            [JsonProperty("mutable-content")]
+            public int MutableContent { get; set; }
         }
 
         [JsonProperty("aps")]
@@ -21,13 +24,15 @@ namespace GaryPortalAPI.Models
         [JsonProperty("feedPostId")]
         public int feedPostId { get; set; }
 
+
         public static Notification CreateNotification(APSAlert alertContent, string chatUUID = null, int? feedPostId = null)
         {
             return new Notification
             {
                 Aps = new ApsPayload
                 {
-                    Alert = alertContent
+                    Alert = alertContent,
+                    MutableContent = 1
                 },
                 chatUUID = chatUUID,
                 feedPostId = feedPostId ?? 0
