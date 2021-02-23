@@ -268,6 +268,7 @@ namespace GaryPortalAPI.Services
                     IsQueued = true,
                     UserGender = creatingUser.UserGender,
                     UserDateOfBirth = creatingUser.UserDOB,
+                    NotificationsMuted = false,
                     UserAuthentication = new UserAuthentication
                     {
                         UserEmail = creatingUser.UserEmail,
@@ -414,7 +415,7 @@ namespace GaryPortalAPI.Services
 
         public async Task<ICollection<string>> GetAPNSFromUUIDAsync(string uuid, CancellationToken ct = default)
         {
-            if (await _context.Users.Where(u => u.UserUUID == uuid).Select(u => u.NotificationsMuted).FirstOrDefaultAsync(ct))
+            if (await _context.Users.Where(u => u.UserUUID == uuid).Select(u => u.NotificationsMuted == false).FirstOrDefaultAsync(ct))
             {
                 return await _context.UserAPNS.Where(u => u.UserUUID == uuid).Select(u => u.APNSToken).ToListAsync(ct);
             }
