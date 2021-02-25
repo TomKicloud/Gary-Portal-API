@@ -11,6 +11,7 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using Microsoft.Extensions.Options;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace GaryPortalAPI.Services.Authentication
 {
@@ -21,6 +22,7 @@ namespace GaryPortalAPI.Services.Authentication
         public string CreateRefreshToken();
         public Task<UserAuthenticationTokens> RefreshTokensForUserAsync(string userUUID, string refreshToken, CancellationToken ct = default);
         public Task<bool> IsRefreshTokenValidAsync(string userUUID, string refreshToken, CancellationToken ct = default);
+        public Task InvalidateAllRefreshTokensAsync(string userUUID);
     }
 
     public class TokenService : ITokenService
@@ -143,6 +145,16 @@ namespace GaryPortalAPI.Services.Authentication
                     AuthenticationToken = await CreateAuthTokenForUserAsync(userUUID),
                     RefreshToken = newRefreshToken
                 };
+        }
+
+        public async Task InvalidateAllRefreshTokensAsync(string uuid)
+        {
+            ICollection<UserRefreshToken> tokens = await _context.UserRefreshTokens.Where(urt => urt.UserUUID == uuid).ToListAsync();
+            foreach (UserRefreshToken token in tokens)
+            {
+                token.TokenIsEnabled = false;
+            }
+            await _context.SaveChangesAsync();
         }
     }
 }

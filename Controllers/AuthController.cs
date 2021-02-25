@@ -20,12 +20,14 @@ namespace GaryPortalAPI.Controllers
         private readonly IAuthenticationService _authenticationService;
         private readonly IUserService _userService;
         private readonly ITokenService _tokenService;
+        private readonly IEmailService _emailService;
 
-        public AuthController(IAuthenticationService authenticationService, ITokenService tokenService, IUserService userService)
+        public AuthController(IAuthenticationService authenticationService, ITokenService tokenService, IUserService userService, IEmailService emailService)
         {
             _authenticationService = authenticationService;
             _tokenService = tokenService;
             _userService = userService;
+            _emailService = emailService;
         }
 
         [HttpPost("Authenticate")]
@@ -68,5 +70,18 @@ namespace GaryPortalAPI.Controllers
             return Ok(user);
         }
 
+        [HttpPost("RequestPassReset/{uuid}")]
+        public async Task<IActionResult> RequestPassReset(string uuid, CancellationToken ct = default)
+        {
+            User user = await _userService.GetByIdAsync(uuid, ct);
+            if (user == null)
+            {
+                return BadRequest();
+            }
+
+            string token = await _authenticationService.AddResetHash(user, ct);
+            _emailService.SendPassRestEmail(user, token);
+            return Ok();
+        }
     }
 }

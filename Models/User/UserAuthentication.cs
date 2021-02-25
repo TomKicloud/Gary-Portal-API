@@ -37,4 +37,24 @@ namespace GaryPortalAPI.Models
         public string AuthenticatorString { get; set; }
         public string Password { get; set; }
     }
+
+    public class UserAuthenticationConfirmation
+    {
+        public string UserUUID { get; set; }
+        public string UserConfirmationHash { get; set; }
+        public DateTime ConfirmationExpiry { get; set; }
+        public bool ConfirmationIsActive { get; set; }
+
+        public virtual User User { get; set; }
+    }
+
+    public class UserPassResetToken
+    {
+        public string UserUUID { get; set; }
+        public string UserResetHash { get; set; }
+        public DateTime HashExpiry { get; set; }
+        public bool HashIsActive { get; set; }
+
+        public virtual User User { get; set; }
+    }
 }

@@ -21,6 +21,9 @@ public class AppDbContext : DbContext
     public DbSet<UserBlock> UserBlocks { get; set; }
     public DbSet<UserAPNS> UserAPNS { get; set; }
 
+    public DbSet<UserAuthenticationConfirmation> UserAuthConfirmations { get; set; }
+    public DbSet<UserPassResetToken> UserPassResetTokens { get; set; }
+
     public DbSet<BanType> BanTypes { get; set; }
     public DbSet<UserBan> UserBans { get; set; }
 
@@ -120,6 +123,26 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<UserAuthentication>(entity =>
         {
             entity.HasKey(ua => ua.UserUUID);
+        });
+
+        modelBuilder.Entity<UserAuthenticationConfirmation>(entity =>
+        {
+            entity.HasKey(uac => new { uac.UserUUID, uac.UserConfirmationHash });
+            entity
+                .HasOne(uac => uac.User)
+                .WithMany()
+                .HasForeignKey(uac => uac.UserUUID)
+                .IsRequired();
+        });
+
+        modelBuilder.Entity<UserPassResetToken>(entity =>
+        {
+            entity.HasKey(uac => new { uac.UserUUID, uac.UserResetHash });
+            entity
+                .HasOne(uac => uac.User)
+                .WithMany()
+                .HasForeignKey(uac => uac.UserUUID)
+                .IsRequired();
         });
 
         modelBuilder.Entity<UserRefreshToken>(entity =>

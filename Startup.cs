@@ -28,12 +28,15 @@ namespace GaryPortalAPI
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddControllers()
+            services.AddControllersWithViews()
+                .AddRazorRuntimeCompilation()
                 .AddNewtonsoftJson(option => {
 
                     option.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
                     option.SerializerSettings.DateFormatString = "yyyy-MM-dd HH:mm:ss";
                 });
+
+            services.AddRazorPages().AddRazorRuntimeCompilation();
 
             services.AddSignalR();
 
@@ -76,6 +79,7 @@ namespace GaryPortalAPI
             services.AddScoped<IChatBotService, ChatBotService>();
             services.AddTransient<IHashingService, HashingService>();
             services.AddTransient<ITokenService, TokenService>();
+            services.AddTransient<IEmailService, EmailService>();
 
         }
 
@@ -88,6 +92,7 @@ namespace GaryPortalAPI
             }
 
             app.UseHttpsRedirection();
+            app.UseStaticFiles();
 
             app.UseRouting();
 
@@ -95,6 +100,7 @@ namespace GaryPortalAPI
 
             app.UseEndpoints(endpoints =>
             {
+                endpoints.MapRazorPages();
                 endpoints.MapControllers();
                 endpoints.MapHub<ChatHub>("/chathub");
                 endpoints.MapHub<GaryPortalHub>("/apphub");
