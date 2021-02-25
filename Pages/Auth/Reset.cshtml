@@ -1,0 +1,34 @@
+﻿@page
+@model GaryPortalAPI.Pages.Auth.ResetModel
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@{
+    Layout = "_Layout";
+}
+
+<div class="row">
+    <h1>Reset Password</h1>
+</div>
+
+<div class="row">
+    <form method="post">
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+        <div class="form-group">
+            <label asp-for="ResetInput.NewPassword"></label>
+            <input asp-for="ResetInput.NewPassword" class="form-control">
+            <span asp-validation-for="ResetInput.NewPassword" class="text-danger"></span>
+        </div>
+        <div class="form-group">
+            <label asp-for="ResetInput.ConfirmPassword"></label>
+            <input asp-for="ResetInput.ConfirmPassword" class="form-control">
+            <span asp-validation-for="ResetInput.ConfirmPassword" class="text-danger"></span>
+        </div>
+        <div class="form-group">
+            <button type="submit" class="btn btn-primary">Reset Password</button>
+        </div>
+    </form>
+</div>
+
+@if (Model.success)
+{
+    <h1>Success! You have changed your password successfully</h1>
+}

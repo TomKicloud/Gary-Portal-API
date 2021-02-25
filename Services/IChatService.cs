@@ -35,16 +35,20 @@ namespace GaryPortalAPI.Services
 
         Task ReportMessageAsync(ChatMessageReport report, CancellationToken ct = default);
         Task MarkReportAsDeletedAsync(int reportId, CancellationToken ct = default);
+
+        Task PostNotificationToChat(string chatUUID, string senderUUID, string content, CancellationToken ct = default);
     }
 
     public class ChatService : IChatService
     {
 
         private readonly AppDbContext _context;
+        private readonly IUserService _userService;
 
-        public ChatService(AppDbContext context)
+        public ChatService(AppDbContext context, IUserService userService)
         {
             _context = context;
+            _userService = userService;
         }
 
         public async Task<Chat> CreateNewChatAsync(Chat chat, CancellationToken ct = default)
@@ -72,14 +76,10 @@ namespace GaryPortalAPI.Services
             return chat;
         }
 
-        //public async Task<Chat> GetChatByUUIDsAsync(string[] uuids, CancellationToken ct = default)
-        //{
-        //    Chat chat = await _context.Chats
-        //        .AsNoTracking()
-        //        .Include(c => c.ChatMembers.Where(cm => cm.IsInChat))
-        //            .ThenInclude(c => c.User)
-        //        .FirstOrDefaultAsync(c => c.ChatMembers.Any())
-        //}
+        public async Task<string> GetChatNameAsync(string chatUUID)
+        {
+            return await _context.Chats.Where(c => c.ChatUUID == chatUUID).Select(c => c.ChatName).FirstOrDefaultAsync();
+        }
 
         public async Task<Chat> EditChatAsync(ChatEditDetails newChat, CancellationToken ct = default)
         {
@@ -122,10 +122,18 @@ namespace GaryPortalAPI.Services
 
         public async Task<ICollection<ChatMember>> GetMembersForChatAsync(string chatUUID, CancellationToken ct = default)
         {
-            return await _context.ChatMembers
+            ICollection<ChatMember> members = await _context.ChatMembers
                 .AsNoTracking()
                 .Where(cm => cm.ChatUUID == chatUUID && cm.IsInChat)
+                .Include(cm => cm.User)
                 .ToListAsync();
+
+            foreach (ChatMember member in members)
+            {
+                member.UserDTO = member.User.ConvertToDTO();
+                member.User = null;
+            }
+            return members;
         }
 
         public async Task<ChatMember> GetChatMemberAsync(string chatUUID, string userUUID, CancellationToken ct = default)
@@ -226,9 +234,6 @@ namespace GaryPortalAPI.Services
             await _context.SaveChangesAsync(ct);
         }
 
-
-
-
         public async Task<ChatMessage> AddMessageToChatAsync(ChatMessage msg, string chatUUID, CancellationToken ct = default)
         {
             msg.ChatMessageUUID = Guid.NewGuid().ToString("N");
@@ -278,7 +283,33 @@ namespace GaryPortalAPI.Services
             }
         }
 
+        public async Task PostNotificationToChat(string chatUUID, string senderUUID, string content, CancellationToken ct = default)
+        {
+            User sender = await _userService.GetByIdAsync(senderUUID, ct);
+            if (sender == null) return;
+            ICollection<ChatMember> members = await GetMembersForChatAsync(chatUUID, ct);
 
+            bool isGroupChat = members.Count > 2;
+            string notificationTitle = isGroupChat ? await GetChatNameAsync(chatUUID) : members.FirstOrDefault(cm => cm.UserUUID != senderUUID).UserDTO.UserFullName;
+
+            foreach (ChatMember member in members)
+            {
+                UserBan globalBan = await _userService.GetFirstBanOfTypeIfAnyAsnc(member.UserUUID, 1, ct);
+                UserBan chatBan = await _userService.GetFirstBanOfTypeIfAnyAsnc(member.UserUUID, 2, ct);
+                if (globalBan != null || chatBan != null)
+                    return;
+
+                ICollection<string> userAPNSTokens = await _userService.GetAPNSFromUUIDAsync(member.UserUUID, ct);
+                foreach (string token in userAPNSTokens)
+                {
+                    Notification notification = Notification.CreateNotification(
+                        new APSAlert { title = notificationTitle, subtitle = isGroupChat ? $"From: {members.FirstOrDefault(cm => cm.UserUUID == senderUUID).UserDTO.UserFullName}" : string.Empty, body = content },
+                        chatUUID: chatUUID);
+
+                    await _userService.PostNotification(token, notification);
+                }
+            }
+        }
 
         public async void Dispose()
         {

@@ -23,6 +23,7 @@ namespace GaryPortalAPI.Models
         public string UserEmail { get; set; }
         public string FullName { get; set; }
         public string ProfilePictureUrl { get; set; }
+        public bool NotificationsMuted { get; set; }
     }
 
     public class StaffManagedUserDetails
@@ -48,6 +49,7 @@ namespace GaryPortalAPI.Models
         public string UserQuote { get; set; }
         public string UserBio { get; set; }
         public string UserGender { get; set; }
+        public bool NotificationsMuted { get; set; }
         public bool UserIsStaff { get; set; }
         public bool UserIsAdmin { get; set; }
         public string UserStanding { get; set; }
@@ -72,6 +74,8 @@ namespace GaryPortalAPI.Models
         public virtual ICollection<FeedLike> FeedLikes { get; set; }
         public virtual ICollection<FeedComment> FeedComments { get; set; }
         public virtual ICollection<AditLog> AditLogs { get; set; }
+
+        public virtual ICollection<UserAPNS> APNSTokens { get; set; }
 
         public virtual UserDTO ConvertToDTO()
         {
@@ -151,5 +155,12 @@ namespace GaryPortalAPI.Models
         public virtual User BlockerUser { get; set; }
         public virtual User BlockedUser { get; set; }
         public virtual UserDTO BlockedUserDTO { get; set; }
+    }
+
+    public class UserAPNS
+    {
+        public int UserAPNSId{ get; set; }
+        public string UserUUID { get; set; }
+        public string APNSToken { get; set; }
     }
 }

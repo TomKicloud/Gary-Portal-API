@@ -4,10 +4,13 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using CorePush.Apple;
+using GaryPortalAPI.Data;
 using GaryPortalAPI.Models;
 using GaryPortalAPI.Services.Authentication;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace GaryPortalAPI.Services
 {
@@ -36,18 +39,23 @@ namespace GaryPortalAPI.Services
         Task UnblockUserAsync(string uuid, string blockedUUID, CancellationToken ct = default);
         Task<ICollection<UserBlock>> GetAllBlocksAsync(string uuid, CancellationToken ct = default);
         Task ReportUserAsync(UserReport report, CancellationToken ct = default);
-        Task MarkReportAsDeletedAsync(int reportId, CancellationToken ct = default);    
+        Task MarkReportAsDeletedAsync(int reportId, CancellationToken ct = default);
+        Task AddAPNS(string uuid, string apns);
+        Task<ICollection<string>> GetAPNSFromUUIDAsync(string uuid, CancellationToken ct = default);
+        Task PostNotification(string apns, Notification notification);
     }
 
     public class UserService : IUserService
     {
         private readonly AppDbContext _context;
         private readonly IHashingService _hashingService;
+        private readonly ApiSettings _apiSettings;
 
-        public UserService(AppDbContext context, IHashingService hashingService)
+        public UserService(AppDbContext context, IHashingService hashingService, IOptions<ApiSettings> settings)
         {
             _context = context;
             _hashingService = hashingService;
+            _apiSettings = settings.Value;
         }
 
         public void Dispose()
@@ -113,7 +121,7 @@ namespace GaryPortalAPI.Services
         {
             return await _context.Users
                 .AsNoTracking()
-                .Where(u => u.UserName == username)
+                .Where(u => u.UserName.ToLower() == username.ToLower())
                 .Select(u => u.UserUUID)
                 .FirstOrDefaultAsync(ct);
         }
@@ -125,7 +133,7 @@ namespace GaryPortalAPI.Services
 
         public async Task<bool> IsUsernameFreeAsync(string username, CancellationToken ct = default)
         {
-            return await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.UserName == username, ct) == null;
+            return await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.UserName.ToLower() == username.ToLower(), ct) == null;
         }
 
         public async Task<UserPoints> GetPointsForUserAsync(string userUUID, CancellationToken ct = default)
@@ -174,10 +182,12 @@ namespace GaryPortalAPI.Services
             if (user == null) return null;
 
             user.UserAuthentication.UserEmail = details.UserEmail;
-            user.UserName = details.UserName;
+            user.UserName = details.UserName.ToLower();
             user.UserFullName = details.FullName;
             user.UserProfileImageUrl = details.ProfilePictureUrl;
+            user.NotificationsMuted = details.NotificationsMuted;
             _context.Update(user);
+
             await _context.SaveChangesAsync(ct);
             return user;
         }
@@ -185,7 +195,7 @@ namespace GaryPortalAPI.Services
         public async Task<User> StaffManageUserDetailsAsync(string uuid, StaffManagedUserDetails details, CancellationToken ct = default)
         {
             User user = await GetByIdAsync(uuid, ct);
-            user.UserName = details.UserName;
+            user.UserName = details.UserName.ToLower();
             user.UserSpanishName = details.SpanishName;
             user.UserProfileImageUrl = details.ProfilePictureUrl;
             user.UserPoints.AmigoPoints = details.AmigoPoints;
@@ -258,6 +268,7 @@ namespace GaryPortalAPI.Services
                     IsQueued = true,
                     UserGender = creatingUser.UserGender,
                     UserDateOfBirth = creatingUser.UserDOB,
+                    NotificationsMuted = false,
                     UserAuthentication = new UserAuthentication
                     {
                         UserEmail = creatingUser.UserEmail,
@@ -389,6 +400,33 @@ namespace GaryPortalAPI.Services
                 _context.Update(report);
                 await _context.SaveChangesAsync();
             }
+        }
+
+        public async Task AddAPNS(string uuid, string apns)
+        {
+            UserAPNS newAPNS = new UserAPNS { UserAPNSId = 0, UserUUID = uuid, APNSToken = apns };
+            UserAPNS existingAPNS = await _context.UserAPNS.Where(t => t.APNSToken == apns).FirstOrDefaultAsync();
+            if (existingAPNS == null)
+            {
+                await _context.UserAPNS.AddAsync(newAPNS);
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        public async Task<ICollection<string>> GetAPNSFromUUIDAsync(string uuid, CancellationToken ct = default)
+        {
+            if (await _context.Users.Where(u => u.UserUUID == uuid).Select(u => u.NotificationsMuted == false).FirstOrDefaultAsync(ct))
+            {
+                return await _context.UserAPNS.Where(u => u.UserUUID == uuid).Select(u => u.APNSToken).ToListAsync(ct);
+            }
+            return null;
+        }
+
+        public async Task PostNotification(string apns, Notification notification)
+        {
+            ApnSettings apnSettings = _apiSettings.APNSSettings.ConvertToAPNSettings();
+            var apn = new ApnSender(apnSettings, new System.Net.Http.HttpClient());
+            await apn.SendAsync(notification, apns);
         }
     }
 }

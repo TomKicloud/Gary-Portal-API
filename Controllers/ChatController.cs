@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Threading;
@@ -176,6 +177,13 @@ namespace GaryPortalAPI.Controllers
                 return BadRequest("User has been banned from Chat");
             string uuid = AuthenticationUtilities.GetUUIDFromIdentity(User);
             return Ok(await _chatBot.GetResponseForCommand(request.input, uuid, request.version));
+        }
+
+        [HttpPost("Notification/{chatUUID}/{senderUUID}")]
+        public async Task<IActionResult> PostNotification([FromBody] string content, string chatUUID, string senderUUID, CancellationToken ct = default)
+        {
+            await _chatService.PostNotificationToChat(chatUUID, senderUUID, content, ct);
+            return Ok();
         }
 
     }

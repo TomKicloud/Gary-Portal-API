@@ -2,14 +2,16 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace GaryPortalAPI.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20210223183621_NotificationMutedChange")]
+    partial class NotificationMutedChange
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -532,25 +534,6 @@ namespace GaryPortalAPI.Migrations
                     b.ToTable("UserAuthentications");
                 });
 
-            modelBuilder.Entity("GaryPortalAPI.Models.UserAuthenticationConfirmation", b =>
-                {
-                    b.Property<string>("UserUUID")
-                        .HasColumnType("varchar(255)");
-
-                    b.Property<string>("UserConfirmationHash")
-                        .HasColumnType("varchar(255)");
-
-                    b.Property<DateTime>("ConfirmationExpiry")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<bool>("ConfirmationIsActive")
-                        .HasColumnType("tinyint(1)");
-
-                    b.HasKey("UserUUID", "UserConfirmationHash");
-
-                    b.ToTable("UserAuthConfirmations");
-                });
-
             modelBuilder.Entity("GaryPortalAPI.Models.UserBan", b =>
                 {
                     b.Property<int>("UserBanId")
@@ -604,25 +587,6 @@ namespace GaryPortalAPI.Migrations
                     b.HasIndex("BlockedUserUUID");
 
                     b.ToTable("UserBlocks");
-                });
-
-            modelBuilder.Entity("GaryPortalAPI.Models.UserPassResetToken", b =>
-                {
-                    b.Property<string>("UserUUID")
-                        .HasColumnType("varchar(255)");
-
-                    b.Property<string>("UserResetHash")
-                        .HasColumnType("varchar(255)");
-
-                    b.Property<DateTime>("HashExpiry")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<bool>("HashIsActive")
-                        .HasColumnType("tinyint(1)");
-
-                    b.HasKey("UserUUID", "UserResetHash");
-
-                    b.ToTable("UserPassResetTokens");
                 });
 
             modelBuilder.Entity("GaryPortalAPI.Models.UserPoints", b =>
@@ -984,17 +948,6 @@ namespace GaryPortalAPI.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("GaryPortalAPI.Models.UserAuthenticationConfirmation", b =>
-                {
-                    b.HasOne("GaryPortalAPI.Models.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserUUID")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("GaryPortalAPI.Models.UserBan", b =>
                 {
                     b.HasOne("GaryPortalAPI.Models.BanType", "BanType")
@@ -1039,17 +992,6 @@ namespace GaryPortalAPI.Migrations
                     b.Navigation("BlockedUser");
 
                     b.Navigation("BlockerUser");
-                });
-
-            modelBuilder.Entity("GaryPortalAPI.Models.UserPassResetToken", b =>
-                {
-                    b.HasOne("GaryPortalAPI.Models.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserUUID")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("GaryPortalAPI.Models.UserPoints", b =>

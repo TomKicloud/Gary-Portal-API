@@ -11,6 +11,7 @@ namespace GaryPortalAPI.Services.Authentication
     {
         bool VerifyHash(string UserPassHash, string UserSalt, string VerifyingPass);
         Tuple<string, string> NewHashAndSalt(string password);
+        string RandomHash();
     }
 
     public class HashingService : IHashingService
@@ -19,7 +20,7 @@ namespace GaryPortalAPI.Services.Authentication
         {
         }
 
-        private string RandomHash()
+        public string RandomHash()
         {
             var bytes = new byte[32];
             using (var rng = new RNGCryptoServiceProvider())
