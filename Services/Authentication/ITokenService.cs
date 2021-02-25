@@ -62,7 +62,7 @@ namespace GaryPortalAPI.Services.Authentication
             SecurityTokenDescriptor tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(claims.ToArray()),
-                Expires = DateTime.Now.AddMinutes(20),
+                Expires = DateTime.Now.AddMinutes(2),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(secretKey), SecurityAlgorithms.HmacSha256Signature),
                 Issuer = _apiSettings.Issuer,
                 Audience = _apiSettings.Issuer,
