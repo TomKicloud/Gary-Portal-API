@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using GaryPortalAPI.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 
 namespace GaryPortalAPI.Services.Authentication
 {
@@ -69,10 +70,11 @@ namespace GaryPortalAPI.Services.Authentication
 
         public async Task<string> AddResetHash(User user, CancellationToken ct = default)
         {
+            string resetHash = Base64UrlEncoder.Encode(_hashingService.RandomHash());
             UserPassResetToken resetToken = new UserPassResetToken
             {
                 UserUUID = user.UserUUID,
-                UserResetHash = _hashingService.RandomHash(),
+                UserResetHash = resetHash,
                 HashExpiry = DateTime.UtcNow.AddMinutes(30),
                 HashIsActive = true
             };
