@@ -9,8 +9,12 @@ namespace GaryPortalAPI.Hubs
     {
         public async Task SendMessage(string senderUUID, string groupToSendTo, string messageUUID)
         {
-            //TODO: Send actual message object
             await Clients.Group(groupToSendTo).SendAsync("MessageReceived", groupToSendTo, senderUUID, messageUUID);
+        }
+
+        public async Task AddedToChat(string chatUUID, string memberUUID)
+        {
+            await Clients.All.SendAsync("AddedToChat", chatUUID, memberUUID);
         }
 
         public async Task DeleteMessage(string groupToSendTo, string messageUUID)
