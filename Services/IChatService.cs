@@ -290,7 +290,7 @@ namespace GaryPortalAPI.Services
             ICollection<ChatMember> members = await GetMembersForChatAsync(chatUUID, ct);
 
             bool isGroupChat = members.Count > 2;
-            string notificationTitle = isGroupChat ? await GetChatNameAsync(chatUUID) : members.FirstOrDefault(cm => cm.UserUUID != senderUUID).UserDTO.UserFullName;
+            string notificationTitle = isGroupChat ? await GetChatNameAsync(chatUUID) : members.FirstOrDefault(cm => cm.UserUUID == senderUUID).UserDTO.UserFullName;
 
             foreach (ChatMember member in members)
             {
