@@ -20,6 +20,7 @@ namespace GaryPortalAPI.Services
         Task<ICollection<User>> GetAllQueuedAsync(CancellationToken ct = default);
         Task<User> GetByIdAsync(string userUUID, CancellationToken ct = default);
         Task<string> GetUUIDFromUsername(string username, CancellationToken ct = default);
+        Task<string> GetUUIDFromEmail(string email, CancellationToken ct = default);
         Task<bool> IsUsernameFreeAsync(string username, CancellationToken ct = default);
         Task<bool> IsEmailFreeAsync(string email, CancellationToken ct = default);
         Task<UserPoints> GetPointsForUserAsync(string userUUID, CancellationToken ct = default);
@@ -122,6 +123,16 @@ namespace GaryPortalAPI.Services
             return await _context.Users
                 .AsNoTracking()
                 .Where(u => u.UserName.ToLower() == username.ToLower())
+                .Select(u => u.UserUUID)
+                .FirstOrDefaultAsync(ct);
+        }
+
+        public async Task<string> GetUUIDFromEmail(string email, CancellationToken ct = default)
+        {
+            return await _context.Users
+                .AsNoTracking()
+                .Include(u => u.UserAuthentication)
+                .Where(u => u.UserAuthentication.UserEmail.ToLower() == email.ToLower())
                 .Select(u => u.UserUUID)
                 .FirstOrDefaultAsync(ct);
         }

@@ -83,5 +83,19 @@ namespace GaryPortalAPI.Controllers
             _emailService.SendPassRestEmail(user, token);
             return Ok();
         }
+
+        [HttpPost("RequestPassResetEmail/{email}")]
+        public async Task<IActionResult> RequestPassResetEmail(string email, CancellationToken ct = default)
+        {
+            User user = await _userService.GetByIdAsync(await _userService.GetUUIDFromEmail(email, ct));
+            if (user == null)
+            {
+                return BadRequest();
+            }
+
+            string token = await _authenticationService.AddResetHash(user, ct);
+            _emailService.SendPassRestEmail(user, token);
+            return Ok();
+        }
     }
 }
