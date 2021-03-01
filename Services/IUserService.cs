@@ -211,7 +211,20 @@ namespace GaryPortalAPI.Services
             user.UserProfileImageUrl = details.ProfilePictureUrl;
             user.UserPoints.AmigoPoints = details.AmigoPoints;
             user.UserPoints.PositivityPoints = details.PositivePoints;
-            user.IsQueued = details.IsQueued;
+
+            if (user.IsQueued != details.IsQueued)
+            {
+                user.IsQueued = details.IsQueued;
+                if (details.IsQueued == false)
+                {
+                    ICollection<string> apns = await GetAPNSFromUUIDAsync(user.UserUUID);
+                    Notification notification = Notification.CreateNotification(new APSAlert { body = "Your account has been activated! Have fun Garrying" });
+                    foreach (string token in apns)
+                    {
+                        await PostNotification(token, notification);
+                    }
+                }
+            }
 
             await UpdatePointsForUserAsync(uuid, user.UserPoints, ct);
 
