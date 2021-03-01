@@ -51,12 +51,14 @@ namespace GaryPortalAPI.Services
         private readonly AppDbContext _context;
         private readonly IHashingService _hashingService;
         private readonly ApiSettings _apiSettings;
+        private readonly ITokenService _tokenService;
 
-        public UserService(AppDbContext context, IHashingService hashingService, IOptions<ApiSettings> settings)
+        public UserService(AppDbContext context, IHashingService hashingService, IOptions<ApiSettings> settings, ITokenService tokenService)
         {
             _context = context;
             _hashingService = hashingService;
             _apiSettings = settings.Value;
+            _tokenService = tokenService;
         }
 
         public void Dispose()
@@ -316,7 +318,9 @@ namespace GaryPortalAPI.Services
                 };
                 await _context.Users.AddAsync(newUser);
                 await _context.SaveChangesAsync();
-                return await GetByIdAsync(newUser.UserUUID);
+                User user = await GetByIdAsync(newUser.UserUUID, ct);
+                user.UserAuthTokens = await _tokenService.GenerateInitialTokensForUserAsync(user.UserUUID, ct);
+                return user;
             }
 
             return null;
