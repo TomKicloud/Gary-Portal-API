@@ -37,6 +37,7 @@ namespace GaryPortalAPI
                 });
 
             services.AddRazorPages().AddRazorRuntimeCompilation();
+            services.AddSwaggerGen();
 
             services.AddSignalR();
 
@@ -89,6 +90,11 @@ namespace GaryPortalAPI
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
+                app.UseSwagger();
+                app.UseSwaggerUI(c =>
+                {
+                    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Gary Portal API v1");
+                });
             }
 
             app.UseHttpsRedirection();
